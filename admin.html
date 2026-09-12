@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Thư Viện Đề Thi - Admin</title>
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <!-- Mammoth JS (Đọc file Word .docx) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js](https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js)"></script>
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
 
     <!-- Header Bar -->
     <header class="bg-indigo-700 text-white shadow-lg mb-8">
-        <div class="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+        <div class="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center flex-wrap gap-4">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-file-pen"></i> TRANG QUẢN TRỊ ĐỀ THI
@@ -48,7 +48,7 @@
                     <label class="block font-medium text-slate-700 mb-1">Branch (Nhánh):</label>
                     <input type="text" id="ghBranch" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" value="main">
                 </div>
-                <div class="md:col-span-2">
+                <div>
                     <label class="block font-medium text-slate-700 mb-1">GitHub Personal Access Token (PAT):</label>
                     <input type="password" id="ghToken" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
                 </div>
@@ -58,14 +58,21 @@
                 </div>
                 <div>
                     <label class="block font-medium text-slate-700 mb-1">Tên Model Gemini:</label>
-                    <input type="text" id="geminiModel" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs" value="gemini-3.6-flash" placeholder="VD: gemini-3.6-flash hoặc gemini-1.5-flash">
+                    <select id="geminiModelSelect" onchange="toggleCustomModelInput()" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng)</option>
+                        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                        <option value="custom">-- Nhập tên Model khác --</option>
+                    </select>
+                    <input type="text" id="customGeminiModel" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none mt-2 hidden text-xs font-mono" placeholder="Nhập tên model thủ công...">
                 </div>
                 <div class="md:col-span-3">
                     <label class="block font-medium text-slate-700 mb-1">URL Google Webhook (Nộp Điểm):</label>
-                    <input type="text" id="webhookUrl" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-xs" placeholder="https://script.google.com/macros/s/.../exec">
+                    <input type="text" id="webhookUrl" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-xs" placeholder="[https://script.google.com/macros/s/.../exec](https://script.google.com/macros/s/.../exec)">
                 </div>
             </div>
-            <div class="mt-4 flex justify-between items-center">
+            <div class="mt-4 flex justify-between items-center flex-wrap gap-2">
                 <span id="configStatus" class="text-xs text-slate-500 font-medium">Chưa kiểm tra cấu hình</span>
                 <button onclick="saveConfig()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
                     <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
@@ -108,13 +115,13 @@
                 </div>
 
                 <!-- Progress / Output Logs -->
-                <div id="logBox" class="hidden p-4 rounded-lg bg-slate-900 text-green-400 font-mono text-xs space-y-1 max-h-40 overflow-y-auto"></div>
+                <div id="logBox" class="hidden p-4 rounded-lg bg-slate-900 text-green-400 font-mono text-xs space-y-1 max-h-48 overflow-y-auto border border-slate-700"></div>
             </div>
         </div>
 
         <!-- CARD 3: THƯ VIỆN ĐỀ THI TRÊN GITHUB -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <div class="flex justify-between items-center mb-4 border-b pb-3">
+            <div class="flex justify-between items-center mb-4 border-b pb-3 flex-wrap gap-2">
                 <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-folder-tree text-amber-500"></i> 3. Thư Viện Đề Thi Trực Tuyến (GitHub /exams)
                 </h2>
@@ -149,7 +156,6 @@
 
     <!-- JavaScript Logic -->
     <script>
-        // Lấy cấu hình khi tải trang
         document.addEventListener('DOMContentLoaded', () => {
             loadConfig();
             if (getConfig().token) {
@@ -162,7 +168,24 @@
             }
         });
 
-        // Hàm đọc / lưu cấu hình LocalStorage
+        function toggleCustomModelInput() {
+            const select = document.getElementById('geminiModelSelect');
+            const customInput = document.getElementById('customGeminiModel');
+            if (select.value === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function getSelectedModelName() {
+            const select = document.getElementById('geminiModelSelect');
+            if (select.value === 'custom') {
+                return document.getElementById('customGeminiModel').value.trim() || 'gemini-2.5-flash';
+            }
+            return select.value;
+        }
+
         function getConfig() {
             return {
                 owner: document.getElementById('ghOwner').value.trim(),
@@ -170,11 +193,11 @@
                 branch: document.getElementById('ghBranch').value.trim() || 'main',
                 token: document.getElementById('ghToken').value.trim(),
                 geminiKey: document.getElementById('geminiKey').value.trim(),
-                geminiModel: document.getElementById('geminiModel').value.trim() || 'gemini-3.6-flash',
+                geminiModel: getSelectedModelName(),
                 webhookUrl: document.getElementById('webhookUrl').value.trim()
             };
         }
-        
+
         function saveConfig() {
             const cfg = getConfig();
             localStorage.setItem('cfg_ghOwner', cfg.owner);
@@ -182,25 +205,31 @@
             localStorage.setItem('cfg_ghBranch', cfg.branch);
             localStorage.setItem('cfg_ghToken', cfg.token);
             localStorage.setItem('cfg_geminiKey', cfg.geminiKey);
-            localStorage.setItem('cfg_geminiModel', cfg.geminiModel);
+            localStorage.setItem('cfg_geminiModelSelect', document.getElementById('geminiModelSelect').value);
+            localStorage.setItem('cfg_customGeminiModel', document.getElementById('customGeminiModel').value);
             localStorage.setItem('cfg_webhookUrl', cfg.webhookUrl);
-        
+
             document.getElementById('configStatus').innerText = "✅ Đã lưu cấu hình!";
             document.getElementById('configStatus').className = "text-xs text-green-600 font-bold";
             fetchExamLibrary();
         }
-        
+
         function loadConfig() {
             document.getElementById('ghOwner').value = localStorage.getItem('cfg_ghOwner') || 'thanhhuynh8989-stack';
             document.getElementById('ghRepo').value = localStorage.getItem('cfg_ghRepo') || 'test';
             document.getElementById('ghBranch').value = localStorage.getItem('cfg_ghBranch') || 'main';
             document.getElementById('ghToken').value = localStorage.getItem('cfg_ghToken') || '';
             document.getElementById('geminiKey').value = localStorage.getItem('cfg_geminiKey') || '';
-            document.getElementById('geminiModel').value = localStorage.getItem('cfg_geminiModel') || 'gemini-3.6-flash';
+            
+            const savedSelect = localStorage.getItem('cfg_geminiModelSelect') || 'gemini-2.5-flash';
+            document.getElementById('geminiModelSelect').value = savedSelect;
+            document.getElementById('customGeminiModel').value = localStorage.getItem('cfg_customGeminiModel') || '';
+            toggleCustomModelInput();
+
             document.getElementById('webhookUrl').value = localStorage.getItem('cfg_webhookUrl') || '';
         }
 
-        // Helper Base64 cho Tiếng Việt Unicode
+        // Unicode Safe Base64 Helper
         function utf8_to_b64(str) {
             const bytes = new TextEncoder().encode(str);
             let binary = '';
@@ -210,27 +239,61 @@
             return window.btoa(binary);
         }
 
-        function b64_to_utf8(str) {
-            const binary = window.atob(str);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) {
-                bytes[i] = binary.charCodeAt(i);
-            }
-            return new TextDecoder().decode(bytes);
-        }
-
-        function addLog(msg) {
+        function addLog(msg, isError = false) {
             const logBox = document.getElementById('logBox');
             logBox.classList.remove('hidden');
             const p = document.createElement('p');
-            p.innerText = `[${new Date().toLocaleTimeString()}]${msg}`;
+            p.className = isError ? 'text-rose-400 font-semibold' : 'text-green-400';
+            p.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             logBox.appendChild(p);
             logBox.scrollTop = logBox.scrollHeight;
         }
 
+        // Safe fetch helper to handle HTML error pages without breaking JSON parser
+        async function safeFetchJson(url, options = {}) {
+            const res = await fetch(url, options);
+            const text = await res.text();
+
+            if (text.trim().startsWith('<') || text.includes('<html>')) {
+                throw new Error(`Máy chủ trả về trang HTML thay vì JSON (HTTP ${res.status}). Vui lòng kiểm tra lại URL/Model/API Key.\nNội dung: ${text.substring(0, 120)}...`);
+            }
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                throw new Error(`Dữ liệu trả về không phải định dạng JSON hợp lệ (HTTP ${res.status}): ${text.substring(0, 120)}...`);
+            }
+
+            if (!res.ok) {
+                const msg = data.error?.message || data.message || `Lỗi HTTP ${res.status}`;
+                throw new Error(msg);
+            }
+
+            return data;
+        }
+
+        // Clean & Extract JSON from AI text response
+        function cleanAndParseJson(rawText) {
+            if (!rawText) throw new Error("AI trả về phản hồi rỗng.");
+            let cleaned = rawText.trim();
+            cleaned = cleaned.replace(/^```[a-z]*\s*/i, '').replace(/\s*```$/i, '');
+            
+            const firstBrace = cleaned.indexOf('{');
+            const lastBrace = cleaned.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+            }
+
+            try {
+                return JSON.parse(cleaned);
+            } catch (e) {
+                throw new Error(`Lỗi cú pháp JSON trong câu trả lời từ AI: ${e.message}`);
+            }
+        }
+
         // ================= GITHUB API HELPERS =================
 
-        // 1. Tải danh sách file trong thư mục /exams
         async function fetchExamLibrary() {
             const cfg = getConfig();
             const tbody = document.getElementById('examTableBody');
@@ -243,31 +306,34 @@
             tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang kết nối GitHub...</td></tr>`;
 
             try {
-                // Kiểm tra file exam.json hiện tại ở root để xem sha
                 let activeSha = null;
                 try {
-                    const activeRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
+                    const activeData = await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
                         headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github.v3+json' }
                     });
-                    if (activeRes.ok) {
-                        const activeData = await activeRes.json();
-                        activeSha = activeData.sha;
-                    }
-                } catch(e){}
+                    activeSha = activeData.sha;
+                } catch(e) {}
 
-                // Đọc danh sách file trong thư mục exams/
-                const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exams?ref=${cfg.branch}`, {
+                const filesRes = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/exams?ref=${cfg.branch}`, {
                     headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github.v3+json' }
                 });
 
-                if (res.status === 404) {
+                if (filesRes.status === 404) {
                     tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Chưa có thư mục <code>exams/</code>. Hãy trích xuất đề đầu tiên bên trên để tự động tạo thư viện!</td></tr>`;
                     return;
                 }
 
-                if (!res.ok) throw new Error(`Lỗi kết nối GitHub API (${res.status})`);
+                const filesText = await filesRes.text();
+                if (filesText.trim().startsWith('<')) {
+                    throw new Error("Nhận được phản hồi HTML từ GitHub. Vui lòng kiểm tra lại GitHub Token và tên Repository.");
+                }
+                const files = JSON.parse(filesText);
 
-                const files = await res.json();
+                if (!Array.isArray(files)) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Không tìm thấy file đề thi nào.</td></tr>`;
+                    return;
+                }
+
                 const jsonFiles = files.filter(f => f.name.endsWith('.json'));
 
                 if (jsonFiles.length === 0) {
@@ -307,30 +373,24 @@
             }
         }
 
-        // 2. KÍCH HOẠT ĐỀ THI (Copy nội dung từ file chọn ghi đè vào exam.json)
         async function activateExam(filePath, fileName) {
             if (!confirm(`Bạn có chắc muốn kích hoạt [${fileName}] làm ĐỀ THI CHÍNH cho học sinh làm bài không?`)) return;
 
             const cfg = getConfig();
             try {
-                // Lấy nội dung file đề thi được chọn từ /exams/
-                const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${filePath}?ref=${cfg.branch}`, {
+                const fileData = await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/${filePath}?ref=${cfg.branch}`, {
                     headers: { 'Authorization': `Bearer ${cfg.token}` }
                 });
-                const fileData = await getRes.json();
                 const examContentB64 = fileData.content;
 
-                // Lấy SHA của file exam.json hiện tại (nếu tồn tại)
                 let activeSha = null;
-                const rootRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
-                    headers: { 'Authorization': `Bearer ${cfg.token}` }
-                });
-                if (rootRes.ok) {
-                    const rootData = await rootRes.json();
+                try {
+                    const rootData = await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
+                        headers: { 'Authorization': `Bearer ${cfg.token}` }
+                    });
                     activeSha = rootData.sha;
-                }
+                } catch(e) {}
 
-                // Ghi đè vào exam.json ở thư mục gốc
                 const putPayload = {
                     message: `Activate exam: ${fileName}`,
                     content: examContentB64,
@@ -338,7 +398,7 @@
                 };
                 if (activeSha) putPayload.sha = activeSha;
 
-                const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json`, {
+                await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/exam.json`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${cfg.token}`,
@@ -347,26 +407,20 @@
                     body: JSON.stringify(putPayload)
                 });
 
-                if (putRes.ok) {
-                    alert(`🎉 ĐÃ KÍCH HOẠT THÀNH CÔNG!\n\nHọc sinh có thể vào làm bài [${fileName}] ngay bây giờ.`);
-                    fetchExamLibrary();
-                } else {
-                    const errJson = await putRes.json();
-                    throw new Error(errJson.message || 'Không thể cập nhật exam.json');
-                }
+                alert(`🎉 ĐÃ KÍCH HOẠT THÀNH CÔNG!\n\nHọc sinh có thể vào làm bài [${fileName}] ngay bây giờ.`);
+                fetchExamLibrary();
 
             } catch (err) {
                 alert(`Lỗi kích hoạt đề thi: ${err.message}`);
             }
         }
 
-        // 3. Xóa một đề thi khỏi thư viện
         async function deleteExam(path, sha, name) {
             if (!confirm(`Xác nhận XÓA vĩnh viễn đề thi [${name}] khỏi thư viện GitHub?`)) return;
 
             const cfg = getConfig();
             try {
-                const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+                await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/${path}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${cfg.token}`,
@@ -379,14 +433,10 @@
                     })
                 });
 
-                if (res.ok) {
-                    alert('Đã xóa thành công!');
-                    fetchExamLibrary();
-                } else {
-                    alert('Không thể xóa file này.');
-                }
+                alert('Đã xóa thành công!');
+                fetchExamLibrary();
             } catch (err) {
-                alert(`Lỗi: ${err.message}`);
+                alert(`Lỗi khi xóa: ${err.message}`);
             }
         }
 
@@ -420,7 +470,8 @@
                     throw new Error("Không thể đọc được văn bản từ file Word.");
                 }
 
-                addLog("2/4: Đang gửi nội dung sang Gemini AI trích xuất câu hỏi...");
+                const modelName = cfg.geminiModel || 'gemini-2.5-flash';
+                addLog(`2/4: Đang gửi nội dung sang Gemini AI (${modelName}) trích xuất câu hỏi...`);
                 
                 const prompt = `Phân tích văn bản đề thi dưới đây và trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm theo các ký tự định dạng markdown như \`\`\`json).
 Cấu trúc JSON yêu cầu:
@@ -444,33 +495,29 @@ Lưu ý: "answer" là chỉ số số nguyên của đáp án đúng (0 tương 
 Văn bản đề thi:
 ${wordText}`;
 
-                const modelName = cfg.geminiModel || 'gemini-3.6-flash';
-                addLog(`2/4: Đang gửi nội dung sang Gemini AI (${modelName}) trích xuất câu hỏi...`);
+                const aiEndpoint = `[https://generativelanguage.googleapis.com/v1beta/models/$](https://generativelanguage.googleapis.com/v1beta/models/$){modelName}:generateContent?key=${cfg.geminiKey}`;
                 
-                const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${cfg.geminiKey}`, {
+                const aiData = await safeFetchJson(aiEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: prompt }] }]
                     })
                 });
-                
-                const aiData = await aiRes.json();
-                
-                if (!aiRes.ok) {
-                    const errorMsg = aiData.error?.message || JSON.stringify(aiData);
-                    throw new Error(`Lỗi Gemini API (${aiRes.status}): ${errorMsg}`);
+
+                if (!aiData.candidates || !aiData.candidates[0]?.content?.parts[0]?.text) {
+                    throw new Error("Gemini AI không trả về dữ liệu kết quả hợp lệ.");
                 }
-                
-                let rawJsonText = aiData.candidates[0].content.parts[0].text.trim();
 
-                // Làm sạch markdown nếu có
-                rawJsonText = rawJsonText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+                const rawJsonText = aiData.candidates[0].content.parts[0].text;
+                const examObj = cleanAndParseJson(rawJsonText);
 
-                const examObj = JSON.parse(rawJsonText);
+                if (!examObj.questions || !Array.isArray(examObj.questions)) {
+                    throw new Error("Dữ liệu JSON từ AI thiếu danh sách câu hỏi ('questions').");
+                }
+
                 addLog(`3/4: Đã trích xuất thành công ${examObj.questions.length} câu hỏi!`);
 
-                // Tạo tên file an toàn (slugify)
                 const slugTitle = title.toLowerCase()
                     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                     .replace(/[^a-z0-9]/g, '_')
@@ -482,7 +529,7 @@ ${wordText}`;
                 const jsonStr = JSON.stringify(examObj, null, 2);
                 const b64Content = utf8_to_b64(jsonStr);
 
-                const putRes = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/${fileName}`, {
+                await safeFetchJson(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/${fileName}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${cfg.token}`,
@@ -495,17 +542,12 @@ ${wordText}`;
                     })
                 });
 
-                if (putRes.ok) {
-                    addLog("✅ HOÀN TẤT! Đã lưu đề thi thành công vào Thư viện GitHub.");
-                    alert(`🎉 Đã tạo đề thi thành công và lưu vào thư viện!\nFile: ${fileName}`);
-                    fetchExamLibrary();
-                } else {
-                    const errData = await putRes.json();
-                    throw new Error(`Lỗi đẩy file lên GitHub: ${errData.message}`);
-                }
+                addLog("✅ HOÀN TẤT! Đã lưu đề thi thành công vào Thư viện GitHub.");
+                alert(`🎉 Đã tạo đề thi thành công và lưu vào thư viện!\nFile: ${fileName}`);
+                fetchExamLibrary();
 
             } catch (err) {
-                addLog(`❌ LỖI: ${err.message}`);
+                addLog(`❌ LỖI: ${err.message}`, true);
                 alert(`Xảy ra lỗi: ${err.message}`);
             } finally {
                 btn.disabled = false;
