@@ -32,7 +32,13 @@ export function initExtractorModule() {
       };
 
       // Tạo tên file an toàn (vd: de_kiem_tra_sinh_hoc.json)
-      const cleanFileName = title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
+      const cleanFileName = title
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "_")
+        .replace(/^_+|_+$/g, ""); // Xóa bỏ gạch dưới ở đầu tên file
       const path = `exams/${cleanFileName}.json`;
       const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(examData, null, 2))));
 
