@@ -1,28 +1,29 @@
 import { getConfig } from './config.js';
 import { loadExamLibrary } from './library.js';
 
-// 1. Hàm đọc văn bản từ file Word .docx
+// 1. Hàm đọc văn bản thuần từ file .docx
 async function readDocxContent(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = function (e) {
       const arrayBuffer = e.target.result;
       if (!window.mammoth) {
-        reject(new Error('Chưa nạp thư viện Mammoth.js. Hãy kiểm tra lại index.html!'));
+        reject(new Error('Chưa nạp thư viện Mammoth.js trong index.html!'));
         return;
       }
       window.mammoth.extractRawText({ arrayBuffer: arrayBuffer })
         .then(result => resolve(result.value))
-        .catch(err => reject(new Error('Không thể đọc nội dung file .docx: ' + err.message)));
+        .catch(err => reject(new Error('Không thể đọc file .docx: ' + err.message)));
     };
-    reader.onerror = err => reject(new Error('Lỗi đọc file từ máy tính: ' + err.message));
+    reader.onerror = err => reject(new Error('Lỗi đọc file từ thiết bị: ' + err.message));
     reader.readAsArrayBuffer(file);
   });
 }
 
-// 2. Hàm gửi request tới Gemini AI API
-async function parseQuestionsWithGemini(rawText, apiKey, modelName) {
-  const activeModel = modelName || 'gemini-2.5-flash';
+// 2. Hàm gửi prompt cho Gemini AI bóc tách câu hỏi
+async function parseQuestionsWithGemini(rawText, apiKey, targetModel) {
+  // Ưu tiên model truyền vào, nếu không có sẽ tự dùng gemini-3.6-flash
+  const activeModelName = targetModel || 'gemini-3.6-flash';
 
   const prompt = `Bạn là một trợ lý AI chuyên trích xuất đề thi. 
 Hãy đọc đoạn văn bản đề thi dưới đây và chuyển đổi toàn bộ thành danh sách câu hỏi trắc nghiệm theo định dạng JSON Array thuần túy (KHÔNG chứa ký tự format markdown như \`\`\`json, KHÔNG giải thích thêm).
@@ -38,7 +39,7 @@ Mỗi câu hỏi phải theo đúng định dạng JSON Object sau:
 Nội dung đề thi gốc:
 ${rawText}`;
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModelName}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -48,17 +49,19 @@ ${rawText}`;
 
   if (!response.ok) {
     const errData = await response.json();
-    throw new Error(`Lỗi Gemini API (${activeModel}): ${errData.error?.message || response.statusText}`);
+    throw new Error(`Lỗi Gemini API (${activeModelName}): ${errData.error?.message || response.statusText}`);
   }
 
   const data = await response.json();
   let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+
+  // Làm sạch chuỗi JSON trả về
   aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
 
   return JSON.parse(aiText);
 }
 
-// 3. Xử lý sự kiện Submit Form Trích Xuất
+// 3. Module chính điều khiển tiến trình trích xuất
 export function initExtractorModule() {
   const form = document.getElementById('extractForm');
   if (!form) return;
@@ -77,24 +80,32 @@ export function initExtractorModule() {
     if (!config.geminiKey) return alert('Vui lòng nhập Gemini API Key ở Mục 1!');
     if (!config.ghToken) return alert('Vui lòng nhập GitHub Personal Access Token ở Mục 1!');
 
-    // Lấy model đã lưu hoặc đặt mặc định
-    const selectedModel = config.geminiModel || 'gemini-2.5-flash';
+    // Lấy tên Model từ cấu hình (Ví dụ: gemini-3.6-flash)
+    const currentModel = config.geminiModel || 'gemini-3.6-flash';
 
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.innerText;
     btn.disabled = true;
 
     try {
-      // BƯỚC 1: Đọc file Word
+      // Tiến trình 1: Đọc file Word
       btn.innerText = '⏳ 1/3. Đang đọc file Word...';
       const rawText = await readDocxContent(fileInput.files[0]);
-      if (!rawText.trim()) throw new Error('File Word được chọn không có nội dung văn bản!');
+      if (!rawText.trim()) throw new Error('File Word rỗng hoặc không chứa văn bản!');
 
-      // BƯỚC 2: Gọi Gemini AI
-      btn.innerText = `🤖 2/3. Gemini (${selectedModel}) đang trích xuất câu hỏi...`;
-      const questions = await parseQuestionsWithGemini(rawText, config.geminiKey, selectedModel);
+      // Tiến trình 2: Trích xuất câu hỏi bằng AI
+      btn.innerText = `🤖 2/3. Gemini (${currentModel}) đang phân tích câu hỏi...`;
+      const questions = await parseQuestionsWithGemini(rawText, config.geminiKey, currentModel);
 
-      // BƯỚC 3: Đóng gói dữ liệu JSON
+      // Tiến trình 3: Chuẩn hóa tên file JSON (ĐCSTH 1 -> dcsth_1.json)
+      const cleanFileName = title
+        .toLowerCase()
+        .replace(/đ/g, "d")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "_")
+        .replace(/^_+|_+$/g, ""); // Xóa bỏ gạch dưới ở đầu tên file
+
       const examData = {
         title,
         duration: parseInt(duration),
@@ -103,20 +114,11 @@ export function initExtractorModule() {
         questions: questions
       };
 
-      // Chuẩn hóa tên file (Loại bỏ ký tự đ, dấu tiếng Việt, ký tự đặc biệt)
-      const cleanFileName = title
-        .toLowerCase()
-        .replace(/đ/g, "d")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, "_")
-        .replace(/^_+|_+$/g, "");
-
       const path = `exams/${cleanFileName}.json`;
       const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(examData, null, 2))));
 
-      // BƯỚC 4: Lưu lên GitHub (Tự động tạo thư mục exams/ nếu chưa có)
-      btn.innerText = '☁️ 3/3. Đang đẩy dữ liệu lên GitHub...';
+      // Tiến trình 4: Đẩy dữ liệu lên GitHub
+      btn.innerText = '☁️ 3/3. Đang lưu lên GitHub...';
       const ghUrl = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/${path}`;
 
       let sha = null;
@@ -143,11 +145,11 @@ export function initExtractorModule() {
       });
 
       if (!putRes.ok) {
-        const errPut = await putRes.json();
-        throw new Error(`Lỗi GitHub API: ${errPut.message || putRes.statusText}`);
+        const errJson = await putRes.json();
+        throw new Error(`Lỗi GitHub API: ${errJson.message || putRes.statusText}`);
       }
 
-      alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và tự động tạo thư mục exams/ trên GitHub.`);
+      alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và lưu vào file exams/${cleanFileName}.json`);
       loadExamLibrary();
 
     } catch (err) {
