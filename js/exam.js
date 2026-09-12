@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Loại bỏ đuôi .json nếu URL truyền dư để tránh lỗi fetch exams/id.json.json
+  // Loại bỏ đuôi .json nếu URL truyền dư
   const cleanExamId = rawExamId.replace(/\.json$/i, '');
 
   try {
@@ -33,44 +33,56 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Lắng nghe sự kiện Bắt đầu làm bài
-  document.getElementById('studentForm').addEventListener('submit', (e) => {
-    e.preventDefault();
+  const studentForm = document.getElementById('studentForm');
+  if (studentForm) {
+    studentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    studentInfo = {
-      name: document.getElementById('svName').value.trim(),
-      id: document.getElementById('svId').value.trim(),
-      class: document.getElementById('svClass').value.trim()
-    };
+      studentInfo = {
+        name: document.getElementById('svName').value.trim(),
+        id: document.getElementById('svId').value.trim(),
+        class: document.getElementById('svClass').value.trim()
+      };
 
-    document.getElementById('displayName').textContent = studentInfo.name;
-    document.getElementById('displayId').textContent = studentInfo.id;
-    document.getElementById('displayClass').textContent = studentInfo.class;
-    document.getElementById('examTitleText').textContent = examData.title;
+      const elName = document.getElementById('displayName');
+      const elId = document.getElementById('displayId');
+      const elClass = document.getElementById('displayClass');
+      const elTitle = document.getElementById('examTitleText');
 
-    document.getElementById('studentModal').style.display = 'none';
-    document.getElementById('examContainer').style.display = 'block';
+      if (elName) elName.textContent = studentInfo.name;
+      if (elId) elId.textContent = studentInfo.id;
+      if (elClass) elClass.textContent = studentInfo.class;
+      if (elTitle) elTitle.textContent = examData.title || 'Bài Kiểm Tra';
 
-    timeLeft = (examData.duration || 15) * 60;
+      document.getElementById('studentModal').style.display = 'none';
+      document.getElementById('examContainer').style.display = 'block';
 
-    renderQuestions();
-    updateProgressTracker();
-    updateViolationTracker();
-    startTimer();
-    setupAntiCheat(); // Kích hoạt giám sát chuyển tab
-  });
+      timeLeft = (examData.duration || 15) * 60;
+
+      renderQuestions();
+      updateProgressTracker();
+      updateViolationTracker();
+      startTimer();
+      setupAntiCheat(); // Kích hoạt giám sát chuyển tab
+    });
+  }
 
   // Lắng nghe sự kiện Nộp bài
-  document.getElementById('quizForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (confirm('Bạn có chắc chắn muốn nộp bài thi?')) {
-      finishExam();
-    }
-  });
+  const quizForm = document.getElementById('quizForm');
+  if (quizForm) {
+    quizForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (confirm('Bạn có chắc chắn muốn nộp bài thi?')) {
+        finishExam();
+      }
+    });
+  }
 });
 
-// Render câu hỏi
+// Render câu hỏi an toàn với Escape HTML
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
+  if (!container) return;
   container.innerHTML = '';
 
   examData.questions.forEach((q, index) => {
@@ -80,13 +92,13 @@ function renderQuestions() {
     let optionsHTML = q.options.map((opt, i) => `
       <label style="display: block; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.4;">
         <input type="radio" name="q_${index}" value="${i}" style="margin-right: 8px;">
-        <strong>${String.fromCharCode(65 + i)}.</strong> ${opt}
+        <strong>${String.fromCharCode(65 + i)}.</strong> ${escapeHTML(opt)}
       </label>
     `).join('');
 
     qCard.innerHTML = `
       <div style="font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b;">
-        Câu ${index + 1}: ${q.question}
+        Câu ${index + 1}: ${escapeHTML(q.question)}
       </div>
       <div>${optionsHTML}</div>
     `;
@@ -98,6 +110,7 @@ function renderQuestions() {
 
 // Tiến độ làm bài
 function updateProgressTracker() {
+  if (!examData || !examData.questions) return;
   const totalQuestions = examData.questions.length;
   let answeredCount = 0;
 
@@ -114,7 +127,7 @@ function updateProgressTracker() {
 
 // Cập nhật số lần vi phạm
 function updateViolationTracker() {
-  const maxViolations = examData.maxViolations || 3;
+  const maxViolations = examData?.maxViolations || 3;
   const trackerEl = document.getElementById('violationTracker');
   if (trackerEl) {
     trackerEl.textContent = `Vi phạm: ${violations}/${maxViolations}`;
@@ -123,7 +136,7 @@ function updateViolationTracker() {
 
 // TÍNH NĂNG GIÁM SÁT CHUYỂN TAB / RỜI MÀN HÌNH
 function setupAntiCheat() {
-  const maxViolations = examData.maxViolations || 3;
+  const maxViolations = examData?.maxViolations || 3;
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && !isExamSubmitted) {
@@ -145,6 +158,7 @@ function startTimer() {
   const timerDisplay = document.getElementById('timerDisplay');
 
   function updateTimerUI() {
+    if (!timerDisplay) return;
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     timerDisplay.textContent = `⏱️ ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -182,10 +196,11 @@ async function finishExam() {
 
   const score = ((correctCount / totalQuestions) * 10).toFixed(2);
   const config = getConfig();
+  const targetWebhook = examData.webhookUrl || config.webhookUrl;
 
-  if (config.webhookUrl) {
+  if (targetWebhook && targetWebhook.startsWith('http')) {
     try {
-      await fetch(config.webhookUrl, {
+      await fetch(targetWebhook, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
@@ -205,15 +220,25 @@ async function finishExam() {
     }
   }
 
-  document.getElementById('examContainer').innerHTML = `
-    <div style="background: #fff; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; max-width: 500px; margin: 40px auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
-      <h2 style="color: #059669; margin-top: 0;">🎉 Hoàn Thành Bài Thi!</h2>
-      <p style="font-size: 16px; color: #334155;">Thí sinh: <strong>${studentInfo.name}</strong> (${studentInfo.id})</p>
-      <div style="font-size: 38px; font-weight: bold; color: #2563eb; margin: 20px 0;">
-        ${score} <span style="font-size: 18px; color: #64748b;">/ 10 điểm</span>
+  const examContainer = document.getElementById('examContainer');
+  if (examContainer) {
+    examContainer.innerHTML = `
+      <div style="background: #fff; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; max-width: 500px; margin: 40px auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
+        <h2 style="color: #059669; margin-top: 0;">🎉 Hoàn Thành Bài Thi!</h2>
+        <p style="font-size: 16px; color: #334155;">Thí sinh: <strong>${escapeHTML(studentInfo.name)}</strong> (${escapeHTML(studentInfo.id)})</p>
+        <div style="font-size: 38px; font-weight: bold; color: #2563eb; margin: 20px 0;">
+          ${score} <span style="font-size: 18px; color: #64748b;">/ 10 điểm</span>
+        </div>
+        <p style="font-size: 15px; color: #475569; margin-bottom: 8px;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
+        <p style="font-size: 14px; color: #dc2626;">Số lần vi phạm (chuyển tab): <strong>${violations}</strong> lần</p>
       </div>
-      <p style="font-size: 15px; color: #475569; margin-bottom: 8px;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
-      <p style="font-size: 14px; color: #dc2626;">Số lần vi phạm (chuyển tab): <strong>${violations}</strong> lần</p>
-    </div>
-  `;
+    `;
+  }
+}
+
+// Hàm mã hóa ký tự đặc biệt
+function escapeHTML(str) {
+  return String(str || '').replace(/[&<>'"]/g, 
+    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+  );
 }
