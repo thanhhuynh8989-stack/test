@@ -33,7 +33,7 @@ Nội dung đề thi gốc:
 ${rawText}`;
 
   // Gọi Gemini API v1beta với model gemini-2.5-flash
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -43,18 +43,15 @@ ${rawText}`;
 
   if (!response.ok) {
     const errData = await response.json();
-    throw new Error(`Lỗi Gemini API: ${errData.error?.message || response.statusText}`);
+    throw new Error(`Lỗi Gemini API (${modelName}): ${errData.error?.message || response.statusText}`);
   }
 
   const data = await response.json();
   let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-
-  // Làm sạch dữ liệu trả về từ AI (xóa các ký tự bọc markdown ```json ... ```)
   aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
 
   return JSON.parse(aiText);
 }
-
 // 3. Module điều khiển gửi form
 export function initExtractorModule() {
   const form = document.getElementById('extractForm');
@@ -86,8 +83,9 @@ export function initExtractorModule() {
       if (!rawText.trim()) throw new Error('File Word rỗng hoặc không có văn bản!');
 
       // Tiến trình 2: Bóc tách câu hỏi bằng Gemini AI
-      btn.innerText = '🤖 2/3. Gemini AI đang phân tích câu hỏi...';
-      const questions = await parseQuestionsWithGemini(rawText, config.geminiKey);
+      const modelName = config.geminiModel || 'gemini-3.6-flash';
+      btn.innerText = `🤖 2/3. Gemini AI (${modelName}) đang phân tích câu hỏi...`;
+      const questions = await parseQuestionsWithGemini(rawText, config.geminiKey, modelName);
 
       // Tiến trình 3: Tạo object và định danh tên file
       const examData = {
