@@ -65,21 +65,38 @@
   </main>
 
   <script>
-    // Cấu hình Google Apps Script Webhook URL (Thêm URL của bạn vào đây)
-    const WEBHOOK_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec";
-    
     let questions = [];
     let studentInfo = {};
     let cheatCount = 0;
     let timerInterval = null;
-    let timeRemaining = 15 * 60; // 15 phút mặc định
+    let timeRemaining = 15 * 60;
+    
+    // Cấu hình mặc định
+    let examConfig = {
+      durationMinutes: 15,
+      maxViolations: 3,
+      webhookUrl: "https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec"
+    };
 
-    // Khởi tạo bài thi từ LocalStorage hoặc dữ liệu mặc định
-    function loadExamData() {
-      const savedExam = localStorage.getItem('current_exam');
-      if (savedExam) {
-        questions = JSON.parse(savedExam);
-      } else {
+    // Đọc cấu hình & danh sách câu hỏi từ exam.json
+    async function loadExamData() {
+      try {
+        const response = await fetch(`./exam.json?t=${new Date().getTime()}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            questions = data; // Tương thích với dạng mảng thuần
+          } else {
+            questions = data.questions || [];
+            if (data.config) {
+              examConfig = { ...examConfig, ...data.config };
+            }
+          }
+        } else {
+          throw new Error("Không tìm thấy file exam.json");
+        }
+      } catch (error) {
+        console.warn("Đang dùng đề mặc định do lỗi đọc file:", error);
         questions = [
           { question: "Thủ đô của Việt Nam là gì?", options: ["Hà Nội", "Đà Nẵng", "TP.HCM", "Cần Thơ"], answer: 0 },
           { question: "1 + 1 bằng bao nhiêu?", options: ["1", "2", "3", "4"], answer: 1 }
@@ -88,7 +105,7 @@
     }
 
     // Bắt đầu thi
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       studentInfo = {
         name: document.getElementById('studentName').value,
@@ -96,7 +113,12 @@
         class: document.getElementById('studentClass').value
       };
 
-      loadExamData();
+      await loadExamData();
+
+      // Cập nhật giao diện theo config từ file exam.json
+      timeRemaining = (examConfig.durationMinutes || 15) * 60;
+      document.getElementById('cheatWarning').innerText = `Số lần vi phạm chuyển tab: 0/${examConfig.maxViolations || 3}`;
+
       document.getElementById('loginCard').classList.add('hidden');
       document.getElementById('examCard').classList.remove('hidden');
       document.getElementById('timerContainer').classList.remove('hidden');
@@ -107,7 +129,6 @@
       initAntiCheat();
     });
 
-    // Hiển thị câu hỏi
     function renderQuestions() {
       const container = document.getElementById('questionsContainer');
       container.innerHTML = '';
@@ -129,23 +150,22 @@
       });
     }
 
-    // Chống gian lận (Phát hiện chuyển tab/thu nhỏ trình duyệt)
     function initAntiCheat() {
+      const maxAllowed = examConfig.maxViolations || 3;
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           cheatCount++;
-          document.getElementById('cheatWarning').innerText = `Số lần vi phạm chuyển tab: ${cheatCount}/3`;
-          if (cheatCount >= 3) {
-            alert('Bạn đã vi phạm quy chế chuyển tab quá 3 lần! Bài thi sẽ tự động nộp.');
+          document.getElementById('cheatWarning').innerText = `Số lần vi phạm chuyển tab: ${cheatCount}/${maxAllowed}`;
+          if (cheatCount >= maxAllowed) {
+            alert(`Bạn đã vi phạm quy chế chuyển tab quá ${maxAllowed} lần! Bài thi sẽ tự động nộp.`);
             submitExam(true);
           } else {
-            alert(`Cảnh báo gian lận (${cheatCount}/3): Bạn vừa rời khỏi màn hình làm bài!`);
+            alert(`Cảnh báo gian lận (${cheatCount}/${maxAllowed}): Bạn vừa rời khỏi màn hình làm bài!`);
           }
         }
       });
     }
 
-    // Bộ đếm thời gian
     function startTimer() {
       timerInterval = setInterval(() => {
         timeRemaining--;
@@ -161,7 +181,6 @@
       }, 1000);
     }
 
-    // Tính điểm và Nộp bài
     function submitExam(autoSubmitted = false) {
       clearInterval(timerInterval);
 
@@ -178,7 +197,6 @@
       document.getElementById('resultCard').classList.remove('hidden');
       document.getElementById('finalScore').innerText = `${score} / 10`;
 
-      // Gửi dữ liệu tới Google Sheets
       const payload = {
         studentId: studentInfo.id,
         studentName: studentInfo.name,
@@ -189,7 +207,9 @@
         submittedAt: new Date().toLocaleString('vi-VN')
       };
 
-      fetch(WEBHOOK_URL, {
+      const webhookUrl = examConfig.webhookUrl || "https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec";
+
+      fetch(webhookUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
