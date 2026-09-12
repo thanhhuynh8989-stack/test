@@ -4,9 +4,7 @@ let examData = null;
 let timerInterval = null;
 let timeLeft = 0;
 let studentInfo = {};
-let violations = 0;
 
-// 1. Khởi tạo & Đọc ID từ URL
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const examId = urlParams.get('id');
@@ -20,40 +18,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // 1. Tải trước dữ liệu bài thi (không hiển thị ra màn hình)
   try {
     const res = await fetch(`exams/${examId}.json`);
-    if (!res.ok) throw new Error('Không thể tải dữ liệu đề thi từ thư viện GitHub.');
+    if (!res.ok) throw new Error('Không thể tải dữ liệu đề thi từ hệ thống!');
     examData = await res.json();
-
-    document.getElementById('examTitleText').textContent = examData.title;
-    timeLeft = (examData.duration || 15) * 60;
   } catch (err) {
     alert(`Lỗi: ${err.message}`);
     return;
   }
 
-  // Bắt sự kiện form nhập thông tin Sinh viên
+  // 2. Lắng nghe sự kiện người dùng điền Form & Bấm "Bắt Đầu Làm Bài"
   document.getElementById('studentForm').addEventListener('submit', (e) => {
     e.preventDefault();
+
     studentInfo = {
       name: document.getElementById('svName').value.trim(),
       id: document.getElementById('svId').value.trim(),
       class: document.getElementById('svClass').value.trim()
     };
 
+    // Cập nhật giao diện thông tin Sinh viên & Đề thi
     document.getElementById('displayName').textContent = studentInfo.name;
     document.getElementById('displayId').textContent = studentInfo.id;
     document.getElementById('displayClass').textContent = studentInfo.class;
+    document.getElementById('examTitleText').textContent = examData.title;
 
+    // Ẩn Form đăng nhập -> Hiện Khung Bài Thi
     document.getElementById('studentModal').style.display = 'none';
-    document.getElementById('studentInfoDisplay').style.display = 'block';
-    document.getElementById('btnSubmit').style.display = 'block';
+    document.getElementById('examContainer').style.display = 'block';
 
+    // Khởi tạo thời gian, Render câu hỏi và bắt đầu đếm ngược
+    timeLeft = (examData.duration || 15) * 60;
     renderQuestions();
+    updateProgressTracker();
     startTimer();
   });
 
-  // Bắt sự kiện nộp bài (Ngăn chặn việc reload trang gây mất ID)
+  // 3. Sự kiện Nộp bài
   document.getElementById('quizForm').addEventListener('submit', (e) => {
     e.preventDefault();
     if (confirm('Bạn có chắc chắn muốn nộp bài thi?')) {
@@ -62,18 +64,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// 2. Hiển thị danh sách câu hỏi
+// Hiển thị danh sách câu hỏi
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
 
   examData.questions.forEach((q, index) => {
     const qCard = document.createElement('div');
-    qCard.style.cssText = 'background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px;';
-    
+    qCard.style.cssText = 'background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px;';
+
     let optionsHTML = q.options.map((opt, i) => `
-      <label style="display: block; margin: 8px 0; cursor: pointer; font-size: 15px;">
-        <input type="radio" name="q_${index}" value="${i}"> ${String.fromCharCode(65 + i)}. ${opt}
+      <label style="display: block; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.4;">
+        <input type="radio" name="q_${index}" value="${i}" style="margin-right: 8px;">
+        <strong>${String.fromCharCode(65 + i)}.</strong> ${opt}
       </label>
     `).join('');
 
@@ -85,16 +88,42 @@ function renderQuestions() {
     `;
     container.appendChild(qCard);
   });
+
+  // Lắng nghe thao tác chọn đáp án để cập nhật số câu đã làm ngay lập tức
+  container.addEventListener('change', updateProgressTracker);
 }
 
-// 3. Đếm ngược thời gian
+// Cập nhật thanh tiến độ "Số câu đã làm / Tổng số câu"
+function updateProgressTracker() {
+  const totalQuestions = examData.questions.length;
+  let answeredCount = 0;
+
+  for (let i = 0; i < totalQuestions; i++) {
+    const selected = document.querySelector(`input[name="q_${i}"]:checked`);
+    if (selected) answeredCount++;
+  }
+
+  const trackerEl = document.getElementById('progressTracker');
+  if (trackerEl) {
+    trackerEl.textContent = `Số câu đã làm: ${answeredCount}/${totalQuestions}`;
+  }
+}
+
+// Chạy thời gian đếm ngược
 function startTimer() {
   const timerDisplay = document.getElementById('timerDisplay');
-  timerInterval = setInterval(() => {
-    timeLeft--;
+
+  function updateTimerUI() {
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     timerDisplay.textContent = `⏱️ ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  updateTimerUI();
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI();
 
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
@@ -104,7 +133,7 @@ function startTimer() {
   }, 1000);
 }
 
-// 4. Báo điểm & Nộp kết quả lên Webhook
+// Xử lý nộp bài
 async function finishExam() {
   clearInterval(timerInterval);
 
@@ -121,7 +150,7 @@ async function finishExam() {
   const score = ((correctCount / totalQuestions) * 10).toFixed(2);
   const config = getConfig();
 
-  // Gửi điểm đến Webhook (Google Sheets/AppScript) nếu có cấu hình
+  // Gửi điểm lên Webhook nếu có cấu hình
   if (config.webhookUrl) {
     try {
       await fetch(config.webhookUrl, {
@@ -139,19 +168,19 @@ async function finishExam() {
         })
       });
     } catch (err) {
-      console.error('Không thể gửi kết quả về Webhook:', err);
+      console.error('Lỗi gửi Webhook:', err);
     }
   }
 
-  // Hiển thị kết quả làm bài
-  document.querySelector('.container').innerHTML = `
-    <div style="background: #fff; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; max-width: 500px; margin: 40px auto;">
+  // Báo kết quả thi
+  document.getElementById('examContainer').innerHTML = `
+    <div style="background: #fff; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; max-width: 500px; margin: 40px auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
       <h2 style="color: #059669; margin-top: 0;">🎉 Hoàn Thành Bài Thi!</h2>
       <p style="font-size: 16px; color: #334155;">Thí sinh: <strong>${studentInfo.name}</strong> (${studentInfo.id})</p>
-      <div style="font-size: 36px; font-weight: bold; color: #2563eb; margin: 20px 0;">
+      <div style="font-size: 38px; font-weight: bold; color: #2563eb; margin: 20px 0;">
         ${score} <span style="font-size: 18px; color: #64748b;">/ 10 điểm</span>
       </div>
-      <p>Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
+      <p style="font-size: 15px; color: #475569;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
     </div>
   `;
 }
