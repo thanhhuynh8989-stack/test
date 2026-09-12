@@ -33,12 +33,12 @@ async function readDocxContent(file) {
   });
 }
 
-// 2. Hàm gửi Gemini AI API với cơ chế Timeout (60s)
+// 2. Hàm gửi Gemini AI API với cơ chế Timeout (60s) & Structured Output
 async function parseQuestionsWithGemini(rawText, apiKey, targetModel) {
   const activeModelName = targetModel || 'gemini-2.5-flash';
 
   const prompt = `Bạn là một trợ lý AI chuyên trích xuất đề thi. 
-Hãy đọc đoạn văn bản đề thi dưới đây và chuyển đổi toàn bộ thành danh sách câu hỏi trắc nghiệm theo định dạng JSON Array thuần túy (KHÔNG chứa ký tự format markdown như \`\`\`json, KHÔNG giải thích thêm).
+Hãy đọc đoạn văn bản đề thi dưới đây và chuyển đổi toàn bộ thành danh sách câu hỏi trắc nghiệm theo định dạng JSON Array.
 
 Mỗi câu hỏi phải theo đúng định dạng JSON Object sau:
 {
@@ -61,7 +61,10 @@ ${rawText}`;
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json" // Ép Gemini trả về dạng JSON chuẩn
+        }
       })
     });
 
@@ -74,12 +77,17 @@ ${rawText}`;
 
     const data = await response.json();
     let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-    aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    // Bóc tách JSON Array an toàn bằng Regex
+    const jsonMatch = aiText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      aiText = jsonMatch[0];
+    }
 
     return JSON.parse(aiText);
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error(`Quá thời gian phản hồi ( Timeout 60s ). Model ${activeModelName} phản hồi chậm hoặc bị treo.`);
+      throw new Error(`Quá thời gian phản hồi (Timeout 60s). Model ${activeModelName} phản hồi chậm hoặc bị treo.`);
     }
     throw err;
   }
@@ -109,7 +117,6 @@ export function initExtractorModule() {
     const originalText = btn.innerText;
     btn.disabled = true;
 
-    // Giả lập chạy tiến độ mượt mà khi gọi AI
     let progressInterval = null;
 
     try {
@@ -127,7 +134,6 @@ export function initExtractorModule() {
       let currentPercent = 25;
       updateProgress(currentPercent, `🤖 2/3. Gemini (${currentModel}) đang phân tích câu hỏi...`);
 
-      // Tăng % tự động mỗi 500ms để người dùng biết hệ thống vẫn chạy
       progressInterval = setInterval(() => {
         if (currentPercent < 80) {
           currentPercent += 2;
@@ -138,6 +144,10 @@ export function initExtractorModule() {
       const questions = await parseQuestionsWithGemini(rawText, config.geminiKey, currentModel);
       clearInterval(progressInterval);
 
+      if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error('Gemini không trích xuất được câu hỏi nào từ file Word này.');
+      }
+
       updateProgress(85, `✅ AI trích xuất xong ${questions.length} câu hỏi!`);
 
       // ----------------------------------------------------
@@ -145,7 +155,7 @@ export function initExtractorModule() {
       // ----------------------------------------------------
       updateProgress(90, '☁️ 3/3. Đang lưu file JSON lên GitHub...');
 
-      const cleanFileName = title
+      let cleanFileName = title
         .toLowerCase()
         .replace(/đ/g, "d")
         .normalize("NFD")
@@ -153,19 +163,25 @@ export function initExtractorModule() {
         .replace(/[^a-z0-9]/g, "_")
         .replace(/^_+|_+$/g, "");
 
+      if (!cleanFileName) {
+        cleanFileName = `exam_${Date.now()}`;
+      }
+
       const examData = {
         title,
-        duration: parseInt(duration),
-        maxViolations: parseInt(maxViolations),
+        duration: parseInt(duration) || 15,
+        maxViolations: parseInt(maxViolations) || 3,
         createdAt: new Date().toISOString(),
         questions: questions
       };
 
       const path = `exams/${cleanFileName}.json`;
       const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(examData, null, 2))));
+      const branch = config.ghBranch || 'main';
 
-      const ghUrl = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/${path}`;
+      const ghUrl = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/${path}?ref=${branch}`;
 
+      // Kiểm tra file đã tồn tại trên GitHub chưa để lấy SHA
       let sha = null;
       const checkRes = await fetch(ghUrl, {
         headers: { 'Authorization': `token ${config.ghToken}` }
@@ -175,7 +191,8 @@ export function initExtractorModule() {
         sha = existingFile.sha;
       }
 
-      const putRes = await fetch(ghUrl, {
+      // Đẩy file lên GitHub via REST API
+      const putRes = await fetch(`https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/${path}`, {
         method: 'PUT',
         headers: {
           'Authorization': `token ${config.ghToken}`,
@@ -184,7 +201,7 @@ export function initExtractorModule() {
         body: JSON.stringify({
           message: `Thêm đề thi: ${title} (${questions.length} câu hỏi)`,
           content: contentBase64,
-          branch: config.ghBranch,
+          branch: branch,
           ...(sha ? { sha } : {})
         })
       });
@@ -195,10 +212,10 @@ export function initExtractorModule() {
       }
 
       updateProgress(100, '🎉 Hoàn tất quá trình trích xuất và lưu thư viện!');
-      
+
       setTimeout(() => {
         alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và tạo file exams/${cleanFileName}.json`);
-        loadExamLibrary();
+        loadExamLibrary(); // Tự động làm mới thư viện đề thi
       }, 300);
 
     } catch (err) {
