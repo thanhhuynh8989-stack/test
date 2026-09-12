@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Quản Trị Đề Thi</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Mammoth.js hỗ trợ đọc file Word .docx -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6 font-sans">
+
+  <!-- Script xác thực mật khẩu từ Google Sheets -->
+  <script>
+    // Hàm mã hóa chuỗi đầu vào thành SHA-256
+    async function sha256(plainText) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(plainText);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Hàm đọc chuỗi Hash từ ô B2, Sheet "Private" trên Google Sheets
+    async function getHashedPassFromSheet() {
+      const sheetId = '1462i25kXaQVYYWcxOqiqAXPn3LJDGnHYPfpukY5whJY';
+      const sheetName = 'Private';
+      const range = 'B2';
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&range=${range}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Không thể kết nối đến Google Sheets. Hãy kiểm tra quyền chia sẻ file.");
+      }
+      const text = await response.text();
+      // Loại bỏ dấu ngoặc kép thừa do định dạng CSV trả về
+      return text.replace(/"/g, '').trim();
+    }
+
+    // Hàm kiểm tra quyền truy cập Admin
+    async function checkAdminAuth() {
+      const inputPass = prompt("Nhập mật khẩu Quản trị viên:");
+      if (!inputPass) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      try {
+        const HASHED_PASS = await getHashedPassFromSheet();
+        const inputHash = await sha256(inputPass);
+
+        if (inputHash !== HASHED_PASS) {
+          alert("Sai mật khẩu truy cập!");
+          window.location.href = "index.html";
+        }
+      } catch (error) {
+        alert("Lỗi xác thực: " + error.message);
+        window.location.href = "index.html";
+      }
+    }
+
+    checkAdminAuth();
+  </script>
+
+  <div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow">
+      <h1 class="text-2xl font-bold text-gray-800">Quản Lý & Tải Đề Thi AI</h1>
+      <a href="index.html" class="text-blue-600 hover:underline">Về Trang Thi Học Sinh</a>
+    </div>
+
+    <!-- Cấu hình Gemini API Key -->
+    <div class="bg-white p-6 rounded-lg shadow space-y-4">
+      <h2 class="text-lg font-bold text-gray-700">1. Cấu Hình Gemini API Key</h2>
+      <input type="password" id="apiKeyInput" placeholder="Dán Gemini API Key của bạn vào đây..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+    </div>
+
+    <!-- Tải File Word Đề Thi -->
+    <div class="bg-white p-6 rounded-lg shadow space-y-4">
+      <h2 class="text-lg font-bold text-gray-700">2. Trích Xuất Câu Hỏi Từ File Word (.docx)</h2>
+      <input type="file" id="docFileInput" accept=".docx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      <button onclick="processDocx()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition">
+        Trích Xuất Câu Hỏi Bằng Gemini AI (3.6 Flash)
+      </button>
+      <p id="processStatus" class="text-sm font-semibold text-gray-600"></p>
+    </div>
+
+    <!-- Preview & Xuất Đề Thi -->
+    <div class="bg-white p-6 rounded-lg shadow space-y-4">
+      <h2 class="text-lg font-bold text-gray-700">3. Danh Sách Câu Hỏi Đã Tạo</h2>
+      <textarea id="jsonPreview" rows="8" class="w-full border p-2 rounded font-mono text-xs bg-gray-50" readonly></textarea>
+      <button onclick="publishExam()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded transition">
+        Cập Nhật Làm Đề Thi Hiện Tại (Lưu LocalStorage)
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let generatedQuestions = [];
+
+    async function processDocx() {
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
+      const fileInput = document.getElementById('docFileInput');
+      const status = document.getElementById('processStatus');
+
+      if (!apiKey) {
+        alert("Vui lòng nhập Gemini API Key!");
+        return;
+      }
+      if (!fileInput.files.length) {
+        alert("Vui lòng chọn 1 file .docx!");
+        return;
+      }
+
+      status.innerText = "Đang đọc nội dung file Word...";
+      status.className = "text-sm font-semibold text-blue-600";
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const arrayBuffer = e.target.result;
+        try {
+          const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+          const extractedText = result.value;
+
+          status.innerText = "Đang gửi nội dung tới Gemini AI để trích xuất JSON...";
+          
+          const promptText = `Hãy phân tích văn bản đề thi sau và trích xuất thành định dạng mảng JSON duy nhất. Mỗi phần tử chứa: "question" (chuỗi), "options" (mảng 4 lựa chọn chuỗi), "answer" (chỉ số 0-3 của đáp án đúng). Không thêm bất kỳ đoạn văn bản giải thích nào ngoài mảng JSON hợp lệ.\n\nVăn bản đề thi:\n${extractedText}`;
+
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }]
+            })
+          });
+
+          const data = await response.json();
+          const aiResponseText = data.candidates[0].content.parts[0].text;
+
+          const cleanJSON = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+          generatedQuestions = JSON.parse(cleanJSON);
+
+          document.getElementById('jsonPreview').value = JSON.stringify(generatedQuestions, null, 2);
+          status.innerText = "Xử lý thành công! Đã tạo " + generatedQuestions.length + " câu hỏi.";
+          status.className = "text-sm font-semibold text-green-600";
+
+        } catch (err) {
+          console.error(err);
+          status.innerText = "Lỗi xử lý file hoặc AI response: " + err.message;
+          status.className = "text-sm font-semibold text-red-600";
+        }
+      };
+
+      reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function publishExam() {
+      if (!generatedQuestions || generatedQuestions.length === 0) {
+        alert("Chưa có danh sách câu hỏi nào để cập nhật!");
+        return;
+      }
+      localStorage.setItem('current_exam', JSON.stringify(generatedQuestions));
+      alert("Đã cập nhật đề thi thành công!");
+    }
+  </script>
+</body>
+</html>
