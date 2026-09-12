@@ -3,31 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang Làm Bài Thi</title>
-  <link rel="stylesheet" href="css/admin.css">
+  <title>Làm Bài Thi Trắc Nghiệm</title>
+  <link rel="stylesheet" href="css/style.css">
   <style>
-    .exam-box { max-width: 800px; margin: 30px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .question-item { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
-    .question-title { font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b; }
-    .option-label { display: block; margin: 8px 0; cursor: pointer; font-size: 14px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
-    .option-label:hover { background-color: #f8fafc; }
-    .timer-bar { position: sticky; top: 12px; z-index: 10; background: #1e293b; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    /* Styling Modal Điền Thông Tin Thí Sinh */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; backdrop-filter: blur(4px);
+    }
+    .modal-card {
+      background: #ffffff; padding: 28px; border-radius: 12px;
+      width: 100%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+    .modal-card h2 { margin-top: 0; color: #1e293b; font-size: 20px; text-align: center; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #475569; }
+    .form-group input {
+      width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1;
+      border-radius: 6px; font-size: 14px; box-sizing: border-box;
+    }
+    .btn-start {
+      width: 100%; padding: 12px; background: #2563eb; color: #fff;
+      border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    .btn-start:hover { background: #1d4ed8; }
+    .student-badge {
+      background: #f1f5f9; padding: 10px 16px; border-radius: 8px;
+      margin-bottom: 20px; border-left: 4px solid #2563eb; font-size: 14px; color: #334155;
+    }
   </style>
 </head>
 <body>
-  <div class="exam-box">
-    <div id="loadingMsg">Đang tải dữ liệu đề thi...</div>
-    <div id="examContainer" style="display: none;">
-      <div class="timer-bar">
-        <h2 id="examTitleDisplay" style="font-size: 16px; margin: 0; color: white;"></h2>
-        <div>Thời gian: <span id="timerDisplay" style="font-weight: bold; color: #facc15;">--:--</span></div>
-      </div>
-      <form id="examForm">
-        <div id="questionsList"></div>
-        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; padding: 12px; font-size: 16px;">Nộp Bài Thi</button>
+
+  <!-- MODAL ĐĂNG NHẬP THÔNG TIN SV -->
+  <div id="studentModal" class="modal-overlay">
+    <div class="modal-card">
+      <h2>📝 Thông Tin Thí Sinh</h2>
+      <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px;">
+        Vui lòng điền đầy đủ thông tin trước khi bắt đầu làm bài.
+      </p>
+      <form id="studentForm">
+        <div class="form-group">
+          <label for="svName">Họ và Tên (*)</label>
+          <input type="text" id="svName" placeholder="Ví dụ: Nguyễn Văn A" required>
+        </div>
+        <div class="form-group">
+          <label for="svId">Mã Số Sinh Viên (MSSV) (*)</label>
+          <input type="text" id="svId" placeholder="Ví dụ: 20261234" required>
+        </div>
+        <div class="form-group">
+          <label for="svClass">Lớp Sinh Hoạt / Học Phần (*)</label>
+          <input type="text" id="svClass" placeholder="Ví dụ: 23DHT01" required>
+        </div>
+        <button type="submit" class="btn-start">Bắt Đầu Làm Bài</button>
       </form>
     </div>
   </div>
+
+  <!-- GIỜ LÀM BÀI KHUNG CHÍNH -->
+  <div class="container" style="max-width: 800px; margin: 30px auto; padding: 0 16px;">
+    
+    <div id="studentInfoDisplay" class="student-badge" style="display: none;">
+      <div><strong>Thí sinh:</strong> <span id="displayName">--</span> | <strong>MSSV:</strong> <span id="displayId">--</span> | <strong>Lớp:</strong> <span id="displayClass">--</span></div>
+    </div>
+
+    <div id="examHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h1 id="examTitleText" style="font-size: 22px; margin: 0; color: #0f172a;">Đang tải bài thi...</h1>
+      <div id="timerDisplay" style="font-size: 18px; font-weight: bold; color: #dc2626; background: #fee2e2; padding: 8px 16px; border-radius: 6px;">
+        ⏱️ --:--
+      </div>
+    </div>
+
+    <form id="quizForm">
+      <div id="questionsContainer"></div>
+      <button type="submit" id="btnSubmit" class="btn-start" style="margin-top: 24px; background: #059669; display: none;">
+        🚀 Nộp Bài Thi
+      </button>
+    </form>
+  </div>
+
   <script type="module" src="js/exam.js"></script>
 </body>
 </html>
