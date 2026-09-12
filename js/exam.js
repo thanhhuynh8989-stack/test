@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Loại bỏ đuôi .json nếu URL truyền dư để tránh lỗi fetch exams/id.json.json
   const cleanExamId = rawExamId.replace(/\.json$/i, '');
 
   try {
@@ -50,12 +51,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('examContainer').style.display = 'block';
 
     timeLeft = (examData.duration || 15) * 60;
-    
+
     renderQuestions();
     updateProgressTracker();
     updateViolationTracker();
     startTimer();
-    setupAntiCheat(); // Kích hoạt cảnh báo chuyển tab
+    setupAntiCheat(); // Kích hoạt giám sát chuyển tab
   });
 
   // Lắng nghe sự kiện Nộp bài
