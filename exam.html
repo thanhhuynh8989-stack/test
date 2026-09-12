@@ -42,7 +42,7 @@
 </head>
 <body>
 
-  <!-- 1. MODAL ĐĂNG NHẬP THÔNG TIN SV (HIỆN ĐẦU TIÊN) -->
+  <!-- MODAL ĐĂNG NHẬP THÔNG TIN SV -->
   <div id="studentModal" class="modal-overlay">
     <div class="modal-card">
       <h2>📝 Thông Tin Thí Sinh</h2>
@@ -67,21 +67,23 @@
     </div>
   </div>
 
-  <!-- 2. KHUNG BÀI THI (ẨN BAN ĐẦU, CHỈ HIỆN KHI BẤM "BẮT ĐẦU LÀM BÀI") -->
+  <!-- KHUNG BÀI THI -->
   <div id="examContainer" class="container" style="max-width: 800px; margin: 30px auto; padding: 0 16px; display: none;">
     
-    <!-- THÔNG TIN THÍ SINH -->
     <div id="studentInfoDisplay" class="student-badge">
       <strong>Thí sinh:</strong> <span id="displayName">--</span> | 
       <strong>MSSV:</strong> <span id="displayId">--</span> | 
       <strong>Lớp:</strong> <span id="displayClass">--</span>
     </div>
 
-    <!-- THANH TIẾN ĐỘ & THỜI GIAN CÒN LẠI -->
+    <!-- THANH TIẾN ĐỘ, VI PHẠM & THỜI GIAN -->
     <div class="exam-status-bar">
       <div>
         <h1 id="examTitleText" style="font-size: 18px; margin: 0 0 4px 0; color: #0f172a;">Đề thi</h1>
-        <span id="progressTracker" style="font-size: 14px; font-weight: 600; color: #2563eb;">Số câu đã làm: 0/0</span>
+        <div style="font-size: 13px;">
+          <span id="progressTracker" style="font-weight: 600; color: #2563eb; margin-right: 12px;">Số câu đã làm: 0/0</span>
+          <span id="violationTracker" style="font-weight: 600; color: #dc2626;">Vi phạm: 0/0</span>
+        </div>
       </div>
       <div id="timerDisplay" style="font-size: 18px; font-weight: bold; color: #dc2626; background: #fee2e2; padding: 8px 16px; border-radius: 6px;">
         ⏱️ --:--
