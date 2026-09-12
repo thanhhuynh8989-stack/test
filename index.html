@@ -12,10 +12,10 @@
     <header class="admin-header">
       <h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
       <p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
-      <a href="#" class="btn-link">Mở Trang Làm Bài &rarr;</a>
+      <a href="exam.html" class="btn-link" target="_blank">Mở Trang Làm Bài &rarr;</a>
     </header>
 
-    <!-- Section 1 -->
+    <!-- Section 1: Cấu hình kết nối -->
     <section class="card">
       <h2>1. Cấu Hình Kết Nối (GitHub & Gemini AI)</h2>
       <form id="configForm" class="form-grid">
@@ -63,7 +63,7 @@
       </form>
     </section>
 
-    <!-- Section 2 -->
+    <!-- Section 2: Trích xuất bằng AI -->
     <section class="card">
       <h2>2. Trích Xuất & Thêm Đề Thi Mới Vào Thư Viện</h2>
       <form id="extractForm" class="form-grid">
@@ -86,7 +86,8 @@
         <div class="form-actions">
           <button type="submit" class="btn btn-success">Trích Xuất Bằng AI & Lưu Lên Thư Viện GitHub</button>
         </div>
-        <!-- Chèn đoạn này ngay dưới nút Submit của #extractForm -->
+
+        <!-- Thanh tiến trình xử lý -->
         <div id="progressContainer" style="display: none; margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #334155;">
             <span id="progressStatus">⏳ Đang chuẩn bị...</span>
@@ -99,7 +100,7 @@
       </form>
     </section>
 
-    <!-- Section 3 -->
+    <!-- Section 3: Thư viện đề thi -->
     <section class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 style="border: none; margin: 0; padding: 0;">3. Thư Viện Đề Thi Trực Tuyến (GitHub /exams)</h2>
