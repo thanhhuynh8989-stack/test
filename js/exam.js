@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Tự động loại bỏ đuôi .json nếu URL truyền dư (Tránh lỗi .json.json)
+  const cleanExamId = rawExamId.replace(/\.json$/i, '');
+
   // 1. Tải trước dữ liệu bài thi (không hiển thị ra màn hình)
   try {
     const res = await fetch(`exams/${examId}.json`);
