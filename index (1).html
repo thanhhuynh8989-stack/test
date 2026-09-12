@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Kiểm Tra Trực Tuyến Tích Hợp AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mammoth.js để đọc file Word (.docx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
+
+    <!-- Thanh Điều Hướng Chuyển Đổi Trang (Admin / Student) -->
+    <nav class="bg-indigo-700 text-white shadow-md p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <span>📝</span> Hệ Thống Thi Trực Tuyến AI
+        </h1>
+        <div class="space-x-2">
+            <button onclick="switchTab('student')" id="nav-student" class="px-4 py-2 rounded bg-indigo-900 font-medium hover:bg-indigo-800 transition">Khu Vực Sinh Viên</button>
+            <button onclick="switchTab('admin')" id="nav-admin" class="px-4 py-2 rounded bg-indigo-600 font-medium hover:bg-indigo-500 transition">Trang Admin</button>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto my-8 p-4">
+
+        <!-- ==================== TRANG ADMIN ==================== -->
+        <div id="view-admin" class="space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                <h2 class="text-2xl font-bold text-indigo-700 mb-4 border-b pb-2 flex items-center gap-2">
+                    <span>⚙️</span> Cấu Hình & Tạo Đề Thi (Admin)
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Google Gemini API Key: <span class="text-rose-500">*</span></label>
+                        <input type="password" id="admin-gemini-key" placeholder="AIzaSy..." class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Google Sheet Webhook URL:</label>
+                        <input type="text" id="admin-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Số lần vi phạm chuyển tab tối đa (N):</label>
+                        <input type="number" id="admin-max-warnings" value="2" min="1" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Thời gian làm bài (Phút):</label>
+                        <input type="number" id="admin-duration" value="15" min="1" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Tải lên File Word chứa đề thi & đáp án (.docx): <span class="text-rose-500">*</span></label>
+                    <input type="file" id="admin-file-word" accept=".docx" class="w-full p-2 border rounded bg-slate-50">
+                    <p class="text-xs text-slate-500 mt-1">Lưu ý: Chỉ chấp nhận định dạng file <b>.docx</b> (Word 2007 trở lên).</p>
+                </div>
+
+                <button onclick="processWordExam()" id="btn-process" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow transition flex justify-center items-center gap-2">
+                    <span id="btn-icon">🚀</span>
+                    <span id="btn-text">Phân Tích Đề Thi Bằng AI & Xuất Bổ Đề</span>
+                </button>
+
+                <!-- Status Banner -->
+                <div id="admin-status-box" class="hidden mt-4 p-4 rounded-lg text-sm font-medium border">
+                    <p id="admin-status" class="flex items-center gap-2"></p>
+                </div>
+            </div>
+
+            <!-- Preview Đề Thi Đã Tạo -->
+            <div id="admin-preview" class="hidden bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                <div class="flex justify-between items-center mb-3 border-b pb-2">
+                    <h3 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                        <span>📄</span> Kết Quả Trích Xuất Đề Thi (<span id="parsed-count">0</span> câu)
+                    </h3>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded font-bold">Thành công</span>
+                </div>
+                <pre id="admin-json-output" class="bg-slate-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs max-h-60 leading-relaxed"></pre>
+                <button onclick="saveExamConfig()" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-lg shadow transition flex justify-center items-center gap-2">
+                    <span>✅ Kích Hoạt & Xuất Đề Thi Cho Sinh Viên</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== TRANG SINH VIÊN ==================== -->
+        <div id="view-student" class="hidden">
+            
+            <!-- Form Đăng Nhập Sinh Viên -->
+            <div id="student-login-card" class="bg-white p-8 rounded-xl shadow-lg border border-slate-200 max-w-md mx-auto">
+                <h2 class="text-2xl font-bold text-center text-indigo-700 mb-6">🔑 Đăng Nhập Làm Bài Thi</h2>
+                <form id="form-login" onsubmit="startExam(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Họ và Tên:</label>
+                        <input type="text" id="stu-name" required placeholder="Nguyễn Văn A" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Mã Sinh Viên (MSSV):</label>
+                        <input type="text" id="stu-id" required placeholder="SV123456" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email:</label>
+                        <input type="email" id="stu-email" required placeholder="sinhvien@gmail.com" class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow transition">
+                        Bắt Đầu Làm Bài
+                    </button>
+                </form>
+            </div>
+
+            <!-- Giao Diện Làm Bài Thi -->
+            <div id="student-exam-card" class="hidden space-y-6">
+                <!-- Status Bar -->
+                <div class="bg-white p-4 rounded-xl shadow border border-slate-200 flex justify-between items-center sticky top-2 z-10">
+                    <div>
+                        <p class="font-bold text-slate-800" id="display-stu-info">Sinh viên: --</p>
+                        <p class="text-xs text-rose-600 font-semibold">⚠️ Chuyển tab sẽ bị đếm vi phạm!</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500">Thời gian còn lại:</span>
+                        <div id="timer" class="text-xl font-extrabold text-indigo-600">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Danh sách câu hỏi -->
+                <div id="exam-questions-container" class="space-y-4"></div>
+
+                <!-- Nút nộp bài -->
+                <button onclick="submitExam('Tự tay nộp bài')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition">
+                    📥 Nộp Bài Thi
+                </button>
+            </div>
+
+            <!-- Màn Hình Kết Quả -->
+            <div id="student-result-card" class="hidden bg-white p-8 rounded-xl shadow-lg border border-slate-200 text-center max-w-lg mx-auto">
+                <div id="result-icon" class="text-6xl mb-4">🎉</div>
+                <h2 id="result-title" class="text-2xl font-bold mb-2">Đã Hoàn Thành Bài Thi!</h2>
+                <p id="result-detail" class="text-slate-600 mb-6"></p>
+                <div class="p-4 bg-slate-50 rounded-lg border mb-6 inline-block w-full">
+                    <p class="text-sm text-slate-500">Điểm số của bạn:</p>
+                    <p id="result-score" class="text-4xl font-extrabold text-indigo-600">0/10</p>
+                </div>
+                <button onclick="resetToLogin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-lg">
+                    Quay Lại Trang Chủ
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Modal Cảnh Báo Vi Phạm Chuyển Tab -->
+    <div id="warning-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
+            <div class="text-5xl">🚨</div>
+            <h3 class="text-xl font-bold text-rose-600">CẢNH BÁO VI PHẠM!</h3>
+            <p id="warning-msg" class="text-slate-700 text-sm whitespace-pre-line"></p>
+            <button onclick="closeWarningModal()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 rounded-lg">
+                Tôi Đã Hiểu & Tiếp Tục Làm Bài
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CẤU HÌNH & BIẾN TOÀN CỤC ====================
+        let examConfig = JSON.parse(localStorage.getItem('EXAM_CONFIG')) || {
+            geminiKey: '',
+            webhookUrl: '',
+            maxWarnings: 2,
+            duration: 15,
+            examData: null
+        };
+
+        let currentStudent = {};
+        let warningCount = 0;
+        let timerInterval = null;
+        let timeLeft = 0;
+        let isExamActive = false;
+
+        // Lưu cấu hình Admin vào Form nếu đã có
+        if (examConfig.geminiKey) document.getElementById('admin-gemini-key').value = examConfig.geminiKey;
+        if (examConfig.webhookUrl) document.getElementById('admin-webhook-url').value = examConfig.webhookUrl;
+        if (examConfig.maxWarnings) document.getElementById('admin-max-warnings').value = examConfig.maxWarnings;
+        if (examConfig.duration) document.getElementById('admin-duration').value = examConfig.duration;
+
+        // Switch View
+        function switchTab(tab) {
+            document.getElementById('view-admin').classList.toggle('hidden', tab !== 'admin');
+            document.getElementById('view-student').classList.toggle('hidden', tab !== 'student');
+            document.getElementById('nav-admin').className = tab === 'admin' ? "px-4 py-2 rounded bg-indigo-900 font-medium" : "px-4 py-2 rounded bg-indigo-600 font-medium hover:bg-indigo-500";
+            document.getElementById('nav-student').className = tab === 'student' ? "px-4 py-2 rounded bg-indigo-900 font-medium" : "px-4 py-2 rounded bg-indigo-600 font-medium hover:bg-indigo-500";
+        }
+
+        function setStatus(message, type = 'info') {
+            const box = document.getElementById('admin-status-box');
+            const statusEl = document.getElementById('admin-status');
+            box.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-800', 'bg-rose-50', 'border-rose-200', 'text-rose-800', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+
+            if (type === 'error') {
+                box.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+                statusEl.innerHTML = `<span>❌</span> <span>${message}</span>`;
+            } else if (type === 'success') {
+                box.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                statusEl.innerHTML = `<span>✅</span> <span>${message}</span>`;
+            } else {
+                box.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+                statusEl.innerHTML = `<span class="spinner"></span> <span>${message}</span>`;
+            }
+        }
+
+        function toggleLoadingButton(isLoading) {
+            const btn = document.getElementById('btn-process');
+            const icon = document.getElementById('btn-icon');
+            const text = document.getElementById('btn-text');
+
+            if (isLoading) {
+                btn.disabled = true;
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                icon.innerHTML = '<span class="spinner"></span>';
+                text.innerText = 'Đang Xử Lý & Gọi AI...';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                icon.innerText = '🚀';
+                text.innerText = 'Phân Tích Đề Thi Bằng AI & Xuất Bổ Đề';
+            }
+        }
+
+        // ==================== CHỨC NĂNG ADMIN (AI & WORD) ====================
+        async function processWordExam() {
+            const apiKey = document.getElementById('admin-gemini-key').value.trim();
+            const webhookUrl = document.getElementById('admin-webhook-url').value.trim();
+            const fileInput = document.getElementById('admin-file-word');
+
+            if (!apiKey) {
+                setStatus("Vui lòng nhập Google Gemini API Key!", "error");
+                return;
+            }
+            if (fileInput.files.length === 0) {
+                setStatus("Vui lòng chọn file Word (.docx) chứa đề thi!", "error");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file.name.endsWith('.docx')) {
+                setStatus("File không hợp lệ! Vui lòng chọn đúng định dạng file .docx", "error");
+                return;
+            }
+
+            toggleLoadingButton(true);
+            setStatus("⏳ Đang đọc nội dung file Word (.docx)...", "info");
+
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const arrayBuffer = e.target.result;
+                    
+                    // 1. Dùng Mammoth để trích xuất text
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    const wordText = result.value ? result.value.trim() : '';
+
+                    if (!wordText || wordText.length < 20) {
+                        throw new Error("Không thể đọc được văn bản từ file Word! Hãy chắc chắn file chứa văn bản (chữ) chứ không phải hình ảnh scanned.");
+                    }
+
+                    setStatus(`🤖 Đã đọc ${wordText.length} ký tự. Đang gửi sang AI Gemini để trích xuất câu hỏi & đáp án...`, "info");
+
+                    // 2. Gọi API Gemini
+                    const parsedExam = await parseExamWithGemini(apiKey, wordText);
+
+                    if (!parsedExam || !parsedExam.questions || parsedExam.questions.length === 0) {
+                        throw new Error("AI không trích xuất được câu hỏi nào từ file Word. Vui lòng kiểm tra lại cấu trúc file!");
+                    }
+
+                    // Lưu cấu hình
+                    examConfig.geminiKey = apiKey;
+                    examConfig.webhookUrl = webhookUrl;
+                    examConfig.maxWarnings = parseInt(document.getElementById('admin-max-warnings').value) || 2;
+                    examConfig.duration = parseInt(document.getElementById('admin-duration').value) || 15;
+                    examConfig.examData = parsedExam;
+
+                    document.getElementById('parsed-count').innerText = parsedExam.questions.length;
+                    document.getElementById('admin-json-output').innerText = JSON.stringify(parsedExam, null, 2);
+                    document.getElementById('admin-preview').classList.remove('hidden');
+
+                    setStatus(`🎉 Trích xuất thành công ${parsedExam.questions.length} câu hỏi! Nhấn 'Kích Hoạt' để xuất đề thi.`, "success");
+
+                } catch (err) {
+                    console.error("Processing Error:", err);
+                    setStatus(`Lỗi xử lý: ${err.message}`, "error");
+                } finally {
+                    toggleLoadingButton(false);
+                }
+            };
+
+            reader.onerror = function(err) {
+                console.error("FileReader Error:", err);
+                setStatus("Lỗi khi đọc file Word từ máy tính!", "error");
+                toggleLoadingButton(false);
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function parseExamWithGemini(apiKey, rawText) {
+            // Giới hạn độ dài văn bản nếu quá dài để tránh vượt quá token
+            const maxChars = 30000;
+            let textToProcess = rawText;
+            if (rawText.length > maxChars) {
+                textToProcess = rawText.substring(0, maxChars);
+                console.warn("Văn bản quá dài, cắt bớt 30,000 ký tự đầu tiên.");
+            }
+
+            const prompt = `Bạn là một hệ thống trợ lý giáo dục chuyên nghiệp.
+Hãy đọc văn bản đề thi dưới đây (chứa danh sách câu hỏi trắc nghiệm và đáp án) và trích xuất thành một đối tượng JSON chuẩn xác.
+
+BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON NHƯ SAU (KHÔNG THÊM BẤT KỲ VĂN BẢN NÀO KHÁC):
+{
+  "title": "Tên bài kiểm tra",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Nội dung câu hỏi?",
+      "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "correctIndex": 0
+    }
+  ]
+}
+
+LƯU Ý QUAN TRỌNG:
+1. "correctIndex" là chỉ số số nguyên của đáp án đúng trong mảng "options" (0 cho A, 1 cho B, 2 cho C, 3 cho D). Hãy cố gắng xác định đáp án đúng dựa vào đánh dấu trong file (như in đậm, gạch chân, hoặc từ khóa "Đáp án:", "Key:").
+2. Nếu trong file không ghi rõ đáp án đúng, hãy dùng tri thức AI của bạn để chọn đáp án đúng nhất cho câu hỏi đó.
+3. Không trả về markdown code fence (không dùng \`\`\`json). Chỉ trả về mã JSON thuần túy.
+
+NỘI DUNG ĐỀ THI TỪ FILE WORD:
+${textToProcess}`;
+
+            // Danh sách các model hỗ trợ để thử nghiệm nếu model chính gặp sự cố
+            const models = ["gemini-3.6-flash"];
+            let lastError = null;
+
+            for (const model of models) {
+                try {
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                responseMimeType: "application/json",
+                                temperature: 0.2,
+                                maxOutputTokens: 8192
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorJson = await response.json().catch(() => ({}));
+                        const errMsg = errorJson.error?.message || `HTTP Code ${response.status}`;
+                        throw new Error(`[Model ${model}] ${errMsg}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (!data.candidates || data.candidates.length === 0) {
+                        throw new Error(`Model ${model} không trả về kết quả (candidates empty).`);
+                    }
+
+                    let responseText = data.candidates[0].content?.parts[0]?.text;
+                    if (!responseText) {
+                        throw new Error("Phản hồi từ AI rỗng.");
+                    }
+
+                    // Loại bỏ markdown code fences nếu có
+                    responseText = responseText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
+                    const parsed = JSON.parse(responseText);
+                    return parsed;
+
+                } catch (err) {
+                    console.warn(`Lỗi khi gọi model ${model}:`, err.message);
+                    lastError = err;
+                    // Thử model tiếp theo
+                }
+            }
+
+            throw lastError || new Error("Không thể kết nối tới Google Gemini API. Vui lòng kiểm tra lại API Key hoặc kết nối mạng.");
+        }
+
+        function saveExamConfig() {
+            localStorage.setItem('EXAM_CONFIG', JSON.stringify(examConfig));
+            alert("🎉 Đã kích hoạt đề thi thành công! Sinh viên hiện tại có thể bắt đầu làm bài.");
+            switchTab('student');
+        }
+
+        // ==================== CHỨC NĂNG SINH VIÊN & CHỐNG GIAN LẬN ====================
+        function startExam(e) {
+            e.preventDefault();
+            
+            if (!examConfig.examData) {
+                return alert("Chưa có đề thi nào được kích hoạt! Vui lòng nhờ Admin tạo đề trước.");
+            }
+
+            currentStudent = {
+                fullName: document.getElementById('stu-name').value.trim(),
+                studentId: document.getElementById('stu-id').value.trim(),
+                email: document.getElementById('stu-email').value.trim()
+            };
+
+            warningCount = 0;
+            isExamActive = true;
+
+            // Render giao diện bài thi
+            document.getElementById('student-login-card').classList.add('hidden');
+            document.getElementById('student-exam-card').classList.remove('hidden');
+            document.getElementById('display-stu-info').innerText = `Sinh viên: ${currentStudent.fullName} (${currentStudent.studentId})`;
+
+            renderQuestions(examConfig.examData.questions);
+
+            // Bắt đầu Đồng Hồ Đếm Ngược
+            timeLeft = (examConfig.duration || 15) * 60;
+            startTimer();
+
+            // Lắng nghe sự kiện chuyển tab (Chống gian lận)
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+        }
+
+        function renderQuestions(questions) {
+            const container = document.getElementById('exam-questions-container');
+            container.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-xl shadow border border-slate-200 space-y-3";
+                
+                let optionsHtml = q.options.map((opt, optIdx) => `
+                    <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-indigo-50 cursor-pointer transition">
+                        <input type="radio" name="question_${idx}" value="${optIdx}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-slate-700">${opt}</span>
+                    </label>
+                `).join('');
+
+                card.innerHTML = `
+                    <p class="font-bold text-slate-800">Câu ${idx + 1}: ${q.question}</p>
+                    <div class="space-y-2">${optionsHtml}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("⏰ Đã hết thời gian làm bài! Hệ thống sẽ tự động nộp bài.");
+                    submitExam('Hết giờ làm bài');
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${m}:${s}`;
+        }
+
+        // --- XỬ LÝ SỰ KIỆN CHUYỂN TAB ---
+        function handleVisibilityChange() {
+            if (!isExamActive) return;
+
+            if (document.hidden) {
+                warningCount++;
+                const maxN = examConfig.maxWarnings || 2;
+
+                if (warningCount < maxN) {
+                    // Vi phạm lần < N: Hiển thị modal cảnh báo
+                    showWarningModal(`Bạn vừa chuyển tab hoặc rời khỏi trang!
+Lần vi phạm: ${warningCount}/${maxN}.
+Nếu vi phạm thêm ${maxN - warningCount} lần nữa, bài thi sẽ bị HỦY TỰ ĐỘNG và nhận 0 điểm!`);
+                } else {
+                    // Vi phạm đủ N lần: Hủy bài ngay lập tức & Nộp kết quả 0 điểm
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    alert(`🚨 BÀI THI BỊ HỦY!
+Bạn đã vi phạm chuyển tab quá ${maxN} lần quy định.`);
+                    submitExam('Hủy do vi phạm chuyển tab quá số lần', true);
+                }
+            }
+        }
+
+        function showWarningModal(msg) {
+            document.getElementById('warning-msg').innerText = msg;
+            document.getElementById('warning-modal').classList.remove('hidden');
+        }
+
+        function closeWarningModal() {
+            document.getElementById('warning-modal').classList.add('hidden');
+        }
+
+        // --- NỘP BÀI THI & CHẤM ĐIỂM ---
+        async function submitExam(statusReason, isCancelled = false) {
+            isExamActive = false;
+            clearInterval(timerInterval);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+            const questions = examConfig.examData.questions;
+            let score = 0;
+
+            if (!isCancelled) {
+                questions.forEach((q, idx) => {
+                    const selected = document.querySelector(`input[name="question_${idx}"]:checked`);
+                    if (selected && parseInt(selected.value) === q.correctIndex) {
+                        score++;
+                    }
+                });
+            }
+
+            // An toàn hoá giao diện
+            document.getElementById('student-exam-card').classList.add('hidden');
+            document.getElementById('student-result-card').classList.remove('hidden');
+
+            const resultTitle = document.getElementById('result-title');
+            const resultScore = document.getElementById('result-score');
+            const resultDetail = document.getElementById('result-detail');
+
+            if (isCancelled) {
+                resultTitle.innerText = "💥 Bài Thi Đã Bị Hủy!";
+                resultTitle.className = "text-2xl font-bold text-rose-600 mb-2";
+                resultScore.innerText = `0/${questions.length}`;
+                resultDetail.innerText = `Lý do: ${statusReason}`;
+            } else {
+                resultTitle.innerText = "🎉 Đã Hoàn Thành Bài Thi!";
+                resultScore.innerText = `${score}/${questions.length}`;
+                resultDetail.innerText = `Bài làm của bạn đã được ghi nhận thành công.`;
+            }
+
+            // Gửi dữ liệu về Google Sheets qua Webhook
+            if (examConfig.webhookUrl) {
+                const payload = {
+                    studentId: currentStudent.studentId,
+                    fullName: currentStudent.fullName,
+                    email: currentStudent.email,
+                    score: isCancelled ? 0 : score,
+                    totalQuestions: questions.length,
+                    violations: warningCount,
+                    status: statusReason
+                };
+
+                try {
+                    await fetch(examConfig.webhookUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log("Đã gửi điểm về Google Sheets");
+                } catch (e) {
+                    console.error("Lỗi gửi Webhook:", e);
+                }
+            }
+        }
+
+        function resetToLogin() {
+            document.getElementById('student-result-card').classList.add('hidden');
+            document.getElementById('student-login-card').classList.remove('hidden');
+            document.getElementById('form-login').reset();
+        }
+    </script>
+</body>
+</html>
