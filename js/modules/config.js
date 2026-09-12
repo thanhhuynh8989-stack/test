@@ -1,7 +1,48 @@
+const CONFIG_KEY = 'admin_exam_config';
+
+export function getConfig() {
+  const data = localStorage.getItem(CONFIG_KEY);
+  return data ? JSON.parse(data) : {
+    ghOwner: 'thanhhuynh8989-stack',
+    ghRepo: 'test',
+    ghBranch: 'main',
+    ghToken: '',
+    geminiKey: '',
+    webhookUrl: ''
+  };
+}
+
 export function initConfigModule() {
   const form = document.getElementById('configForm');
+  const config = getConfig();
+
+  // Đổ dữ liệu đã lưu vào form
+  if (config.ghOwner) document.getElementById('ghOwner').value = config.ghOwner;
+  if (config.ghRepo) document.getElementById('ghRepo').value = config.ghRepo;
+  if (config.ghBranch) document.getElementById('ghBranch').value = config.ghBranch || 'main';
+  if (config.ghToken) document.getElementById('ghToken').value = config.ghToken;
+  if (config.geminiKey) document.getElementById('geminiKey').value = config.geminiKey;
+  if (config.webhookUrl) document.getElementById('webhookUrl').value = config.webhookUrl;
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    console.log('Lưu cấu hình GitHub & Gemini API...');
+    const newConfig = {
+      ghOwner: document.getElementById('ghOwner').value.trim(),
+      ghRepo: document.getElementById('ghRepo').value.trim(),
+      ghBranch: document.getElementById('ghBranch').value.trim() || 'main',
+      ghToken: document.getElementById('ghToken').value.trim(),
+      geminiKey: document.getElementById('geminiKey').value.trim(),
+      webhookUrl: document.getElementById('webhookUrl').value.trim()
+    };
+
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
+    
+    const badge = document.querySelector('.status-badge');
+    if (badge) {
+      badge.textContent = 'Đã lưu cấu hình';
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#166534';
+    }
+    alert('Lưu cấu hình thành công!');
   });
 }
