@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Làm Bài Thi</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .exam-box { max-width: 800px; margin: 30px auto; padding: 24px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .question-item { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+    .question-title { font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b; }
+    .option-label { display: block; margin: 8px 0; cursor: pointer; font-size: 14px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
+    .option-label:hover { background-color: #f8fafc; }
+    .timer-bar { position: sticky; top: 12px; z-index: 10; background: #1e293b; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+  </style>
+</head>
+<body>
+  <div class="exam-box">
+    <div id="loadingMsg">Đang tải dữ liệu đề thi...</div>
+    <div id="examContainer" style="display: none;">
+      <div class="timer-bar">
+        <h2 id="examTitleDisplay" style="font-size: 16px; margin: 0; color: white;"></h2>
+        <div>Thời gian: <span id="timerDisplay" style="font-weight: bold; color: #facc15;">--:--</span></div>
+      </div>
+      <form id="examForm">
+        <div id="questionsList"></div>
+        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; padding: 12px; font-size: 16px;">Nộp Bài Thi</button>
+      </form>
+    </div>
+  </div>
+  <script type="module" src="js/exam.js"></script>
+</body>
+</html>
