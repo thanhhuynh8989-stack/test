@@ -1,209 +1,503 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang Quản Trị Đề Thi</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Mammoth.js hỗ trợ đọc file Word .docx -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thư Viện Đề Thi - Admin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mammoth JS (Đọc file Word .docx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 min-h-screen p-6 font-sans">
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
 
-  <!-- Script xác thực mật khẩu từ Google Sheets -->
-  <script>
-    async function sha256(plainText) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(plainText);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    async function getHashedPassFromSheet() {
-      const sheetId = '1462i25kXaQVYYWcxOqiqAXPn3LJDGnHYPfpukY5whJY';
-      const sheetName = 'Private';
-      const range = 'B2';
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&range=${range}`;
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Không thể kết nối đến Google Sheets. Hãy kiểm tra quyền chia sẻ file.");
-      }
-      const text = await response.text();
-      return text.replace(/"/g, '').trim();
-    }
-
-    async function checkAdminAuth() {
-      const inputPass = prompt("Nhập mật khẩu Quản trị viên:");
-      if (!inputPass) {
-        window.location.href = "index.html";
-        return;
-      }
-
-      try {
-        const HASHED_PASS = await getHashedPassFromSheet();
-        const inputHash = await sha256(inputPass);
-
-        if (inputHash !== HASHED_PASS) {
-          alert("Sai mật khẩu truy cập!");
-          window.location.href = "index.html";
-        }
-      } catch (error) {
-        alert("Lỗi xác thực: " + error.message);
-        window.location.href = "index.html";
-      }
-    }
-
-    checkAdminAuth();
-  </script>
-
-  <div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow">
-      <h1 class="text-2xl font-bold text-gray-800">Quản Lý & Tải Đề Thi AI</h1>
-      <a href="index.html" class="text-blue-600 hover:underline">Về Trang Thi Học Sinh</a>
-    </div>
-
-    <!-- Cấu hình Cấu trúc bài thi & Webhook -->
-    <div class="bg-white p-6 rounded-lg shadow space-y-4">
-      <h2 class="text-lg font-bold text-gray-700">1. Cấu Hình Bài Thi & Kết Nối Bảng Điểm</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Thời gian làm bài (Phút):</label>
-          <input type="number" id="durationInput" value="15" min="1" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+    <!-- Header Bar -->
+    <header class="bg-indigo-700 text-white shadow-lg mb-8">
+        <div class="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-file-pen"></i> TRANG QUẢN TRỊ ĐỀ THI
+                </h1>
+                <p class="text-indigo-200 text-sm mt-1">Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
+            </div>
+            <a href="index.html" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2 border border-indigo-400">
+                <i class="fa-solid fa-external-link"></i> Mở Trang Làm Bài
+            </a>
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Số lần vi phạm chuyển tab tối đa:</label>
-          <input type="number" id="maxViolationsInput" value="3" min="1" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 space-y-8">
+
+        <!-- CARD 1: CẤU HÌNH HỆ THỐNG -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
+                <i class="fa-solid fa-gears text-indigo-600"></i> 1. Cấu Hình Kết Nối (GitHub & Gemini AI)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">GitHub Owner (Tài khoản):</label>
+                    <input type="text" id="ghOwner" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="thanhhuynh8989-stack">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">GitHub Repository (Kho chứa):</label>
+                    <input type="text" id="ghRepo" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="test">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Branch (Nhánh):</label>
+                    <input type="text" id="ghBranch" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" value="main">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block font-medium text-slate-700 mb-1">GitHub Personal Access Token (PAT):</label>
+                    <input type="password" id="ghToken" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Gemini API Key:</label>
+                    <input type="password" id="geminiKey" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs" placeholder="AIzaSy...">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block font-medium text-slate-700 mb-1">URL Google Webhook (Nộp Điểm):</label>
+                    <input type="text" id="webhookUrl" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-xs" placeholder="https://script.google.com/macros/s/.../exec">
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+                <span id="configStatus" class="text-xs text-slate-500 font-medium">Chưa kiểm tra cấu hình</span>
+                <button onclick="saveConfig()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Lưu Cấu Hình
+                </button>
+            </div>
         </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">URL Google Web App Webhook (Nộp Điểm):</label>
-        <input type="text" id="webhookInput" value="https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none font-mono text-xs">
-      </div>
+
+        <!-- CARD 2: TRÍCH XUẤT VÀ TẠO BỘ ĐỀ MỚI -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
+                <i class="fa-solid fa-file-word text-blue-600"></i> 2. Trích Xuất & Thêm Đề Thi Mới Vào Thư Viện
+            </h2>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tên Bộ Đề Thi (*):</label>
+                        <input type="text" id="examTitle" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="VD: Đề Kiểm Tra Sinh Học Giữa Kỳ 1 - Lớp 10">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Thời Gian Làm Bài (Phút):</label>
+                        <input type="number" id="examDuration" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" value="45">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Số Lần Vi Phạm Tối Đa (Chuyển tab):</label>
+                        <input type="number" id="maxViolations" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" value="3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Chọn File Đề Thi Word (.docx):</label>
+                        <input type="file" id="wordFileInput" accept=".docx" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button id="btnProcess" onclick="processAndUploadExam()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Trích Xuất Bằng AI & Lưu Lên Thư Viện GitHub
+                    </button>
+                </div>
+
+                <!-- Progress / Output Logs -->
+                <div id="logBox" class="hidden p-4 rounded-lg bg-slate-900 text-green-400 font-mono text-xs space-y-1 max-h-40 overflow-y-auto"></div>
+            </div>
+        </div>
+
+        <!-- CARD 3: THƯ VIỆN ĐỀ THI TRÊN GITHUB -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-folder-tree text-amber-500"></i> 3. Thư Viện Đề Thi Trực Tuyến (GitHub /exams)
+                </h2>
+                <button onclick="fetchExamLibrary()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg border border-slate-300 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i> Làm Mới Danh Sách
+                </button>
+            </div>
+
+            <!-- Bảng danh sách đề -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                            <th class="p-3 font-semibold">Tên File / Đề Thi</th>
+                            <th class="p-3 font-semibold w-32">Kích Thước</th>
+                            <th class="p-3 font-semibold w-40 text-center">Trạng Thái</th>
+                            <th class="p-3 font-semibold w-64 text-center">Hành Động (Action)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="examTableBody" class="divide-y divide-slate-200">
+                        <tr>
+                            <td colspan="4" class="p-6 text-center text-slate-400">
+                                <i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tải danh sách đề thi từ GitHub...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Cấu hình Gemini API Key -->
-    <div class="bg-white p-6 rounded-lg shadow space-y-4">
-      <h2 class="text-lg font-bold text-gray-700">2. Cấu Hình Gemini API Key</h2>
-      <input type="password" id="apiKeyInput" placeholder="Dán Gemini API Key của bạn vào đây..." class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
-    </div>
+    <!-- JavaScript Logic -->
+    <script>
+        // Lấy cấu hình khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            if (getConfig().token) {
+                fetchExamLibrary();
+            } else {
+                document.getElementById('examTableBody').innerHTML = `
+                    <tr><td colspan="4" class="p-6 text-center text-amber-600 bg-amber-50 rounded-lg">
+                        ⚠️ Vui lòng hoàn tất nhập Cấu Hình (GitHub Owner, Repo, Token) ở mục 1 để xem danh sách đề thi.
+                    </td></tr>`;
+            }
+        });
 
-    <!-- Tải File Word Đề Thi -->
-    <div class="bg-white p-6 rounded-lg shadow space-y-4">
-      <h2 class="text-lg font-bold text-gray-700">3. Trích Xuất Câu Hỏi Từ File Word (.docx)</h2>
-      <input type="file" id="docFileInput" accept=".docx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-      <button onclick="processDocx()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded transition">
-        Trích Xuất Câu Hỏi Bằng Gemini AI (3.6 Flash)
-      </button>
-      <p id="processStatus" class="text-sm font-semibold text-gray-600"></p>
-    </div>
-
-    <!-- Preview & Xuất Đề Thi -->
-    <div class="bg-white p-6 rounded-lg shadow space-y-4">
-      <h2 class="text-lg font-bold text-gray-700">4. Xem Trước & Xuất File Cấu Hình Đề Thi</h2>
-      <textarea id="jsonPreview" rows="8" class="w-full border p-2 rounded font-mono text-xs bg-gray-50" readonly></textarea>
-      <button onclick="downloadExamJSON()" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded transition">
-        Tải File exam.json Về Máy
-      </button>
-    </div>
-  </div>
-
-  <script>
-    let generatedQuestions = [];
-
-    async function processDocx() {
-      const apiKey = document.getElementById('apiKeyInput').value.trim();
-      const fileInput = document.getElementById('docFileInput');
-      const status = document.getElementById('processStatus');
-
-      if (!apiKey) {
-        alert("Vui lòng nhập Gemini API Key!");
-        return;
-      }
-      if (!fileInput.files.length) {
-        alert("Vui lòng chọn 1 file .docx!");
-        return;
-      }
-
-      status.innerText = "Đang đọc nội dung file Word...";
-      status.className = "text-sm font-semibold text-blue-600";
-
-      const reader = new FileReader();
-      reader.onload = async function(e) {
-        const arrayBuffer = e.target.result;
-        try {
-          const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-          const extractedText = result.value;
-
-          status.innerText = "Đang gửi nội dung tới Gemini AI...";
-          
-          const promptText = `Hãy phân tích văn bản đề thi sau và trích xuất thành định dạng mảng JSON duy nhất. Mỗi phần tử chứa: "question" (chuỗi), "options" (mảng 4 lựa chọn chuỗi), "answer" (chỉ số 0-3 của đáp án đúng). Không thêm bất kỳ đoạn văn bản giải thích nào ngoài mảng JSON hợp lệ.\n\nVăn bản đề thi:\n${extractedText}`;
-
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptText }] }]
-            })
-          });
-
-          const data = await response.json();
-          const aiResponseText = data.candidates[0].content.parts[0].text;
-
-          const cleanJSON = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
-          generatedQuestions = JSON.parse(cleanJSON);
-
-          updatePreview();
-          status.innerText = "Xử lý thành công! Đã trích xuất " + generatedQuestions.length + " câu hỏi.";
-          status.className = "text-sm font-semibold text-green-600";
-
-        } catch (err) {
-          console.error(err);
-          status.innerText = "Lỗi xử lý file hoặc AI response: " + err.message;
-          status.className = "text-sm font-semibold text-red-600";
+        // Hàm đọc / lưu cấu hình LocalStorage
+        function getConfig() {
+            return {
+                owner: document.getElementById('ghOwner').value.trim(),
+                repo: document.getElementById('ghRepo').value.trim(),
+                branch: document.getElementById('ghBranch').value.trim() || 'main',
+                token: document.getElementById('ghToken').value.trim(),
+                geminiKey: document.getElementById('geminiKey').value.trim(),
+                webhookUrl: document.getElementById('webhookUrl').value.trim()
+            };
         }
-      };
 
-      reader.readAsArrayBuffer(fileInput.files[0]);
+        function saveConfig() {
+            const cfg = getConfig();
+            localStorage.setItem('cfg_ghOwner', cfg.owner);
+            localStorage.setItem('cfg_ghRepo', cfg.repo);
+            localStorage.setItem('cfg_ghBranch', cfg.branch);
+            localStorage.setItem('cfg_ghToken', cfg.token);
+            localStorage.setItem('cfg_geminiKey', cfg.geminiKey);
+            localStorage.setItem('cfg_webhookUrl', cfg.webhookUrl);
+
+            document.getElementById('configStatus').innerText = "✅ Đã lưu cấu hình!";
+            document.getElementById('configStatus').className = "text-xs text-green-600 font-bold";
+            fetchExamLibrary();
+        }
+
+        function loadConfig() {
+            document.getElementById('ghOwner').value = localStorage.getItem('cfg_ghOwner') || 'thanhhuynh8989-stack';
+            document.getElementById('ghRepo').value = localStorage.getItem('cfg_ghRepo') || 'test';
+            document.getElementById('ghBranch').value = localStorage.getItem('cfg_ghBranch') || 'main';
+            document.getElementById('ghToken').value = localStorage.getItem('cfg_ghToken') || '';
+            document.getElementById('geminiKey').value = localStorage.getItem('cfg_geminiKey') || '';
+            document.getElementById('webhookUrl').value = localStorage.getItem('cfg_webhookUrl') || '';
+        }
+
+        // Helper Base64 cho Tiếng Việt Unicode
+        function utf8_to_b64(str) {
+            const bytes = new TextEncoder().encode(str);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function b64_to_utf8(str) {
+            const binary = window.atob(str);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return new TextDecoder().decode(bytes);
+        }
+
+        function addLog(msg) {
+            const logBox = document.getElementById('logBox');
+            logBox.classList.remove('hidden');
+            const p = document.createElement('p');
+            p.innerText = `[${new Date().toLocaleTimeString()}]${msg}`;
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ================= GITHUB API HELPERS =================
+
+        // 1. Tải danh sách file trong thư mục /exams
+        async function fetchExamLibrary() {
+            const cfg = getConfig();
+            const tbody = document.getElementById('examTableBody');
+
+            if (!cfg.owner || !cfg.repo || !cfg.token) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-amber-600">Vui lòng điền đủ GitHub Owner, Repo và Token để hiển thị thư viện.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang kết nối GitHub...</td></tr>`;
+
+            try {
+                // Kiểm tra file exam.json hiện tại ở root để xem sha
+                let activeSha = null;
+                try {
+                    const activeRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
+                        headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (activeRes.ok) {
+                        const activeData = await activeRes.json();
+                        activeSha = activeData.sha;
+                    }
+                } catch(e){}
+
+                // Đọc danh sách file trong thư mục exams/
+                const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exams?ref=${cfg.branch}`, {
+                    headers: { 'Authorization': `Bearer ${cfg.token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (res.status === 404) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Chưa có thư mục <code>exams/</code>. Hãy trích xuất đề đầu tiên bên trên để tự động tạo thư viện!</td></tr>`;
+                    return;
+                }
+
+                if (!res.ok) throw new Error(`Lỗi kết nối GitHub API (${res.status})`);
+
+                const files = await res.json();
+                const jsonFiles = files.filter(f => f.name.endsWith('.json'));
+
+                if (jsonFiles.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500">Chưa có đề thi nào trong thư viện.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                for (const file of jsonFiles) {
+                    const isCurrentActive = (file.sha === activeSha);
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition";
+                    tr.innerHTML = `
+                        <td class="p-3 font-medium text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-file-code text-indigo-500"></i> ${file.name}
+                        </td>
+                        <td class="p-3 text-slate-500 font-mono text-xs">${(file.size / 1024).toFixed(1)} KB</td>
+                        <td class="p-3 text-center">
+                            ${isCurrentActive 
+                                ? `<span class="bg-green-100 text-green-700 font-semibold px-2.5 py-1 rounded-full text-xs flex items-center justify-center gap-1"><i class="fa-solid fa-circle-check"></i> Đang Đề Chính</span>` 
+                                : `<span class="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full text-xs">Lưu trữ</span>`}
+                        </td>
+                        <td class="p-3 text-center space-x-2">
+                            <button onclick="activateExam('${file.path}', '${file.name}')" class="${isCurrentActive ? 'bg-slate-300 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'} text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition" ${isCurrentActive ? 'disabled' : ''}>
+                                <i class="fa-solid fa-bolt"></i> Kích Hoạt
+                            </button>
+                            <button onclick="deleteExam('${file.path}', '${file.sha}', '${file.name}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-rose-600 font-medium">Lỗi: ${err.message}</td></tr>`;
+            }
+        }
+
+        // 2. KÍCH HOẠT ĐỀ THI (Copy nội dung từ file chọn ghi đè vào exam.json)
+        async function activateExam(filePath, fileName) {
+            if (!confirm(`Bạn có chắc muốn kích hoạt [${fileName}] làm ĐỀ THI CHÍNH cho học sinh làm bài không?`)) return;
+
+            const cfg = getConfig();
+            try {
+                // Lấy nội dung file đề thi được chọn từ /exams/
+                const getRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${filePath}?ref=${cfg.branch}`, {
+                    headers: { 'Authorization': `Bearer ${cfg.token}` }
+                });
+                const fileData = await getRes.json();
+                const examContentB64 = fileData.content;
+
+                // Lấy SHA của file exam.json hiện tại (nếu tồn tại)
+                let activeSha = null;
+                const rootRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json?ref=${cfg.branch}`, {
+                    headers: { 'Authorization': `Bearer ${cfg.token}` }
+                });
+                if (rootRes.ok) {
+                    const rootData = await rootRes.json();
+                    activeSha = rootData.sha;
+                }
+
+                // Ghi đè vào exam.json ở thư mục gốc
+                const putPayload = {
+                    message: `Activate exam: ${fileName}`,
+                    content: examContentB64,
+                    branch: cfg.branch
+                };
+                if (activeSha) putPayload.sha = activeSha;
+
+                const putRes = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/exam.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${cfg.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(putPayload)
+                });
+
+                if (putRes.ok) {
+                    alert(`🎉 ĐÃ KÍCH HOẠT THÀNH CÔNG!\n\nHọc sinh có thể vào làm bài [${fileName}] ngay bây giờ.`);
+                    fetchExamLibrary();
+                } else {
+                    const errJson = await putRes.json();
+                    throw new Error(errJson.message || 'Không thể cập nhật exam.json');
+                }
+
+            } catch (err) {
+                alert(`Lỗi kích hoạt đề thi: ${err.message}`);
+            }
+        }
+
+        // 3. Xóa một đề thi khỏi thư viện
+        async function deleteExam(path, sha, name) {
+            if (!confirm(`Xác nhận XÓA vĩnh viễn đề thi [${name}] khỏi thư viện GitHub?`)) return;
+
+            const cfg = getConfig();
+            try {
+                const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${cfg.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Delete exam file: ${name}`,
+                        sha: sha,
+                        branch: cfg.branch
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Đã xóa thành công!');
+                    fetchExamLibrary();
+                } else {
+                    alert('Không thể xóa file này.');
+                }
+            } catch (err) {
+                alert(`Lỗi: ${err.message}`);
+            }
+        }
+
+        // ================= XỬ LÝ TRÍCH XUẤT ĐỀ BẰNG GEMINI AI =================
+
+        async function processAndUploadExam() {
+            const cfg = getConfig();
+            const title = document.getElementById('examTitle').value.trim();
+            const duration = parseInt(document.getElementById('examDuration').value) || 45;
+            const maxViolations = parseInt(document.getElementById('maxViolations').value) || 3;
+            const fileInput = document.getElementById('wordFileInput');
+
+            if (!title) { alert('Vui lòng nhập Tên Bộ Đề Thi!'); return; }
+            if (!fileInput.files.length) { alert('Vui lòng chọn file Word (.docx)!'); return; }
+            if (!cfg.geminiKey) { alert('Vui lòng nhập Gemini API Key ở mục 1!'); return; }
+            if (!cfg.token) { alert('Vui lòng nhập GitHub Token ở mục 1!'); return; }
+
+            const btn = document.getElementById('btnProcess');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý... Xin chờ...`;
+            document.getElementById('logBox').innerHTML = '';
+
+            try {
+                addLog("1/4: Đang đọc nội dung file Word (.docx)...");
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                const wordText = result.value;
+
+                if (!wordText || wordText.trim().length === 0) {
+                    throw new Error("Không thể đọc được văn bản từ file Word.");
+                }
+
+                addLog("2/4: Đang gửi nội dung sang Gemini AI trích xuất câu hỏi...");
+                
+                const prompt = `Phân tích văn bản đề thi dưới đây và trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm theo các ký tự định dạng markdown như \`\`\`json).
+Cấu trúc JSON yêu cầu:
+{
+  "title": "${title}",
+  "duration": ${duration},
+  "maxViolations": ${maxViolations},
+  "webhookUrl": "${cfg.webhookUrl}",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Nội dung câu hỏi...",
+      "options": ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"],
+      "answer": 0
     }
+  ]
+}
 
-    function buildExamPackage() {
-      return {
-        config: {
-          durationMinutes: parseInt(document.getElementById('durationInput').value) || 15,
-          maxViolations: parseInt(document.getElementById('maxViolationsInput').value) || 3,
-          webhookUrl: document.getElementById('webhookInput').value.trim()
-        },
-        questions: generatedQuestions
-      };
-    }
+Lưu ý: "answer" là chỉ số số nguyên của đáp án đúng (0 tương ứng Đáp án 1, 1 tương ứng Đáp án 2, 2 tương ứng Đáp án 3, 3 tương ứng Đáp án 4).
 
-    function updatePreview() {
-      const fullData = buildExamPackage();
-      document.getElementById('jsonPreview').value = JSON.stringify(fullData, null, 2);
-    }
+Văn bản đề thi:
+${wordText}`;
 
-    // Tự động cập nhật preview khi đổi thông số
-    document.getElementById('durationInput').addEventListener('input', updatePreview);
-    document.getElementById('maxViolationsInput').addEventListener('input', updatePreview);
-    document.getElementById('webhookInput').addEventListener('input', updatePreview);
+                const aiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cfg.geminiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
 
-    function downloadExamJSON() {
-      if (!generatedQuestions || generatedQuestions.length === 0) {
-        alert("Chưa có danh sách câu hỏi để xuất gói đề thi!");
-        return;
-      }
-      
-      const fullData = buildExamPackage();
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "exam.json");
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-  </script>
+                if (!aiRes.ok) throw new Error("Lỗi khi gọi Gemini AI Key. Hãy kiểm tra lại API Key.");
+
+                const aiData = await aiRes.json();
+                let rawJsonText = aiData.candidates[0].content.parts[0].text.trim();
+
+                // Làm sạch markdown nếu có
+                rawJsonText = rawJsonText.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+
+                const examObj = JSON.parse(rawJsonText);
+                addLog(`3/4: Đã trích xuất thành công ${examObj.questions.length} câu hỏi!`);
+
+                // Tạo tên file an toàn (slugify)
+                const slugTitle = title.toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^a-z0-9]/g, '_')
+                    .replace(/_+/g, '_');
+                const fileName = `exams/${slugTitle}_${Date.now().toString().slice(-4)}.json`;
+
+                addLog(`4/4: Đang đẩy file [${fileName}] lên kho GitHub...`);
+
+                const jsonStr = JSON.stringify(examObj, null, 2);
+                const b64Content = utf8_to_b64(jsonStr);
+
+                const putRes = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){cfg.owner}/${cfg.repo}/contents/${fileName}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${cfg.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Add exam: ${title}`,
+                        content: b64Content,
+                        branch: cfg.branch
+                    })
+                });
+
+                if (putRes.ok) {
+                    addLog("✅ HOÀN TẤT! Đã lưu đề thi thành công vào Thư viện GitHub.");
+                    alert(`🎉 Đã tạo đề thi thành công và lưu vào thư viện!\nFile: ${fileName}`);
+                    fetchExamLibrary();
+                } else {
+                    const errData = await putRes.json();
+                    throw new Error(`Lỗi đẩy file lên GitHub: ${errData.message}`);
+                }
+
+            } catch (err) {
+                addLog(`❌ LỖI: ${err.message}`);
+                alert(`Xảy ra lỗi: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Trích Xuất Bằng AI & Lưu Lên Thư Viện GitHub`;
+            }
+        }
+    </script>
 </body>
 </html>
