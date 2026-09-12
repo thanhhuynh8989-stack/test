@@ -6,16 +6,15 @@
   <title>Làm Bài Thi Trắc Nghiệm</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Styling Modal Điền Thông Tin Thí Sinh */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.75);
+      background: rgba(15, 23, 42, 0.85);
       display: flex; align-items: center; justify-content: center;
       z-index: 9999; backdrop-filter: blur(4px);
     }
     .modal-card {
       background: #ffffff; padding: 28px; border-radius: 12px;
-      width: 100%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      width: 100%; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
     }
     .modal-card h2 { margin-top: 0; color: #1e293b; font-size: 20px; text-align: center; }
     .form-group { margin-bottom: 16px; }
@@ -30,19 +29,25 @@
     }
     .btn-start:hover { background: #1d4ed8; }
     .student-badge {
-      background: #f1f5f9; padding: 10px 16px; border-radius: 8px;
-      margin-bottom: 20px; border-left: 4px solid #2563eb; font-size: 14px; color: #334155;
+      background: #f1f5f9; padding: 12px 16px; border-radius: 8px;
+      margin-bottom: 16px; border-left: 4px solid #2563eb; font-size: 14px; color: #334155;
+    }
+    .exam-status-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #ffffff; padding: 12px 16px; border-radius: 8px;
+      border: 1px solid #e2e8f0; margin-bottom: 20px; position: sticky; top: 10px; z-index: 100;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
   </style>
 </head>
 <body>
 
-  <!-- MODAL ĐĂNG NHẬP THÔNG TIN SV -->
+  <!-- 1. MODAL ĐĂNG NHẬP THÔNG TIN SV (HIỆN ĐẦU TIÊN) -->
   <div id="studentModal" class="modal-overlay">
     <div class="modal-card">
       <h2>📝 Thông Tin Thí Sinh</h2>
       <p style="font-size: 13px; color: #64748b; text-align: center; margin-bottom: 20px;">
-        Vui lòng điền đầy đủ thông tin trước khi bắt đầu làm bài.
+        Vui lòng điền đầy đủ thông tin để bắt đầu bài thi.
       </p>
       <form id="studentForm">
         <div class="form-group">
@@ -57,20 +62,27 @@
           <label for="svClass">Lớp Sinh Hoạt / Học Phần (*)</label>
           <input type="text" id="svClass" placeholder="Ví dụ: 23DHT01" required>
         </div>
-        <button type="submit" class="btn-start">Bắt Đầu Làm Bài</button>
+        <button type="submit" class="btn-start">🚀 Bắt Đầu Làm Bài</button>
       </form>
     </div>
   </div>
 
-  <!-- GIỜ LÀM BÀI KHUNG CHÍNH -->
-  <div class="container" style="max-width: 800px; margin: 30px auto; padding: 0 16px;">
+  <!-- 2. KHUNG BÀI THI (ẨN BAN ĐẦU, CHỈ HIỆN KHI BẤM "BẮT ĐẦU LÀM BÀI") -->
+  <div id="examContainer" class="container" style="max-width: 800px; margin: 30px auto; padding: 0 16px; display: none;">
     
-    <div id="studentInfoDisplay" class="student-badge" style="display: none;">
-      <div><strong>Thí sinh:</strong> <span id="displayName">--</span> | <strong>MSSV:</strong> <span id="displayId">--</span> | <strong>Lớp:</strong> <span id="displayClass">--</span></div>
+    <!-- THÔNG TIN THÍ SINH -->
+    <div id="studentInfoDisplay" class="student-badge">
+      <strong>Thí sinh:</strong> <span id="displayName">--</span> | 
+      <strong>MSSV:</strong> <span id="displayId">--</span> | 
+      <strong>Lớp:</strong> <span id="displayClass">--</span>
     </div>
 
-    <div id="examHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h1 id="examTitleText" style="font-size: 22px; margin: 0; color: #0f172a;">Đang tải bài thi...</h1>
+    <!-- THANH TIẾN ĐỘ & THỜI GIAN CÒN LẠI -->
+    <div class="exam-status-bar">
+      <div>
+        <h1 id="examTitleText" style="font-size: 18px; margin: 0 0 4px 0; color: #0f172a;">Đề thi</h1>
+        <span id="progressTracker" style="font-size: 14px; font-weight: 600; color: #2563eb;">Số câu đã làm: 0/0</span>
+      </div>
       <div id="timerDisplay" style="font-size: 18px; font-weight: bold; color: #dc2626; background: #fee2e2; padding: 8px 16px; border-radius: 6px;">
         ⏱️ --:--
       </div>
@@ -78,7 +90,7 @@
 
     <form id="quizForm">
       <div id="questionsContainer"></div>
-      <button type="submit" id="btnSubmit" class="btn-start" style="margin-top: 24px; background: #059669; display: none;">
+      <button type="submit" id="btnSubmit" class="btn-start" style="margin-top: 24px; background: #059669;">
         🚀 Nộp Bài Thi
       </button>
     </form>
