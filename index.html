@@ -3,225 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Kiểm Tra Trực Tuyến</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Trang Quản Trị Đề Thi</title>
+  <link rel="stylesheet" href="css/admin.css">
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col justify-between font-sans">
+<body>
+  <div class="admin-container">
+    <header class="admin-header">
+      <h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
+      <p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
+      <a href="#" class="btn-link">Mở Trang Làm Bài &rarr;</a>
+    </header>
 
-  <!-- Header -->
-  <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
-    <h1 class="text-xl font-bold">Bài Kiểm Tra Trực Tuyến</h1>
-    <div id="timerContainer" class="hidden text-right">
-      <span class="text-sm">Thời gian còn lại:</span>
-      <span id="timer" class="text-lg font-bold text-yellow-300">00:00</span>
-    </div>
-  </header>
-
-  <main class="container mx-auto p-4 max-w-3xl flex-grow">
-    <!-- Form Đăng Nhập Học Sinh -->
-    <div id="loginCard" class="bg-white p-6 rounded-lg shadow-md mt-10">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800 text-center">Thông Tin Học Sinh</h2>
-      <form id="loginForm" class="space-y-4">
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Họ và Tên</label>
-          <input type="text" id="studentName" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+    <!-- Section 1 -->
+    <section class="card">
+      <h2>1. Cấu Hình Kết Nối (GitHub & Gemini AI)</h2>
+      <form id="configForm" class="form-grid">
+        <div class="form-group">
+          <label for="ghOwner">GitHub Owner (Tài khoản):</label>
+          <input type="text" id="ghOwner" value="thanhhuynh8989-stack">
         </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Mã Học Sinh / SBD</label>
-          <input type="text" id="studentId" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="form-group">
+          <label for="ghRepo">GitHub Repository (Kho chứa):</label>
+          <input type="text" id="ghRepo" value="test">
         </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Lớp</label>
-          <input type="text" id="studentClass" required class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="form-group">
+          <label for="ghBranch">Branch (Nhánh):</label>
+          <input type="text" id="ghBranch" value="main">
         </div>
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-md transition">
-          Bắt Đầu Làm Bài
-        </button>
+        <div class="form-group">
+          <label for="ghToken">GitHub Personal Access Token (PAT):</label>
+          <input type="password" id="ghToken" value="••••••••••••••••">
+        </div>
+        <div class="form-group">
+          <label for="geminiKey">Gemini API Key:</label>
+          <input type="password" id="geminiKey" value="••••••••••••••••">
+        </div>
+        <div class="form-group">
+          <label>Tên Model Gemini:</label>
+          <div class="input-inline">
+            <select id="geminiSelect">
+              <option>-- Nhập tên Model khác --</option>
+            </select>
+            <input type="text" placeholder="Nhập tên model thủ công...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="webhookUrl">URL Google Webhook (Nộp Điểm):</label>
+          <input type="text" id="webhookUrl" value="https://script.google.com/macros/s/...">
+        </div>
+        <div class="form-actions">
+          <span class="status-badge">Chưa kiểm tra cấu hình</span>
+          <button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
+        </div>
       </form>
-    </div>
+    </section>
 
-    <!-- Khu Vực Bài Thi -->
-    <div id="examCard" class="hidden bg-white p-6 rounded-lg shadow-md space-y-6">
-      <div class="flex justify-between items-center border-b pb-3">
-        <div>
-          <p id="displayStudentInfo" class="font-bold text-gray-800"></p>
-          <p id="cheatWarning" class="text-xs text-red-500 font-semibold mt-1">Số lần vi phạm chuyển tab: 0/3</p>
+    <!-- Section 2 -->
+    <section class="card">
+      <h2>2. Trích Xuất & Thêm Đề Thi Mới Vào Thư Viện</h2>
+      <form id="extractForm" class="form-grid">
+        <div class="form-group">
+          <label for="examTitle">Tên Bộ Đề Thi (*):</label>
+          <input type="text" id="examTitle" placeholder="VD: Đề Kiểm Tra Sinh Học G">
         </div>
+        <div class="form-group">
+          <label for="examDuration">Thời Gian Làm Bài (Phút):</label>
+          <input type="number" id="examDuration" value="45">
+        </div>
+        <div class="form-group">
+          <label for="maxViolations">Số Lần Vi Phạm Tối Đa (Chuyển tab):</label>
+          <input type="number" id="maxViolations" value="3">
+        </div>
+        <div class="form-group">
+          <label for="docxFile">Chọn File Đề Thi Word (.docx):</label>
+          <input type="file" id="docxFile" accept=".docx">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success">Trích Xuất Bằng AI & Lưu Lên Thư Viện GitHub</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 style="border: none; margin: 0; padding: 0;">3. Thư Viện Đề Thi Trực Tuyến (GitHub /exams)</h2>
+        <button id="btnRefresh" class="btn btn-secondary">Làm Mới Danh Sách</button>
       </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tên File / Đề Thi</th>
+            <th>Kích Thước</th>
+            <th>Trạng Thái</th>
+            <th>Hành Động (Action)</th>
+          </tr>
+        </thead>
+        <tbody id="libraryTableBody">
+          <tr>
+            <td colspan="4" class="empty-msg">Chưa có thư mục exams/. Hãy trích xuất đề đầu tiên bên trên để tự động tạo thư viện!</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
 
-      <div id="questionsContainer" class="space-y-6"></div>
-
-      <button id="submitBtn" onclick="submitExam(false)" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-md transition">
-        Nộp Bài Thi
-      </button>
-    </div>
-
-    <!-- Màn Hình Kết Quả -->
-    <div id="resultCard" class="hidden bg-white p-6 rounded-lg shadow-md text-center mt-10 space-y-4">
-      <h2 class="text-3xl font-bold text-gray-800">Hoàn Thành Bài Thi!</h2>
-      <p class="text-lg">Điểm số của bạn: <span id="finalScore" class="text-2xl font-bold text-blue-600">0</span></p>
-      <p id="submitStatus" class="text-sm text-gray-500">Đang gửi kết quả lên hệ thống...</p>
-    </div>
-  </main>
-
-  <script>
-    let questions = [];
-    let studentInfo = {};
-    let cheatCount = 0;
-    let timerInterval = null;
-    let timeRemaining = 15 * 60;
-    
-    // Cấu hình mặc định
-    let examConfig = {
-      durationMinutes: 15,
-      maxViolations: 3,
-      webhookUrl: "https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec"
-    };
-
-    // Đọc cấu hình & danh sách câu hỏi từ exam.json
-    async function loadExamData() {
-      try {
-        const response = await fetch(`./exam.json?t=${new Date().getTime()}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (Array.isArray(data)) {
-            questions = data; // Tương thích với dạng mảng thuần
-          } else {
-            questions = data.questions || [];
-            if (data.config) {
-              examConfig = { ...examConfig, ...data.config };
-            }
-          }
-        } else {
-          throw new Error("Không tìm thấy file exam.json");
-        }
-      } catch (error) {
-        console.warn("Đang dùng đề mặc định do lỗi đọc file:", error);
-        questions = [
-          { question: "Thủ đô của Việt Nam là gì?", options: ["Hà Nội", "Đà Nẵng", "TP.HCM", "Cần Thơ"], answer: 0 },
-          { question: "1 + 1 bằng bao nhiêu?", options: ["1", "2", "3", "4"], answer: 1 }
-        ];
-      }
-    }
-
-    // Bắt đầu thi
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      studentInfo = {
-        name: document.getElementById('studentName').value,
-        id: document.getElementById('studentId').value,
-        class: document.getElementById('studentClass').value
-      };
-
-      await loadExamData();
-
-      // Cập nhật giao diện theo config từ file exam.json
-      timeRemaining = (examConfig.durationMinutes || 15) * 60;
-      document.getElementById('cheatWarning').innerText = `Số lần vi phạm chuyển tab: 0/${examConfig.maxViolations || 3}`;
-
-      document.getElementById('loginCard').classList.add('hidden');
-      document.getElementById('examCard').classList.remove('hidden');
-      document.getElementById('timerContainer').classList.remove('hidden');
-      document.getElementById('displayStudentInfo').innerText = `${studentInfo.name} - HSID: ${studentInfo.id} (${studentInfo.class})`;
-
-      renderQuestions();
-      startTimer();
-      initAntiCheat();
-    });
-
-    function renderQuestions() {
-      const container = document.getElementById('questionsContainer');
-      container.innerHTML = '';
-      questions.forEach((q, idx) => {
-        const qDiv = document.createElement('div');
-        qDiv.className = 'p-4 border rounded-md bg-gray-50 space-y-2';
-        let optionsHTML = q.options.map((opt, oIdx) => `
-          <label class="flex items-center space-x-2 cursor-pointer p-1 rounded hover:bg-gray-200">
-            <input type="radio" name="question_${idx}" value="${oIdx}" class="w-4 h-4 text-blue-600">
-            <span>${opt}</span>
-          </label>
-        `).join('');
-
-        qDiv.innerHTML = `
-          <p class="font-semibold text-gray-800">Câu ${idx + 1}: ${q.question}</p>
-          <div class="space-y-1">${optionsHTML}</div>
-        `;
-        container.appendChild(qDiv);
-      });
-    }
-
-    function initAntiCheat() {
-      const maxAllowed = examConfig.maxViolations || 3;
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          cheatCount++;
-          document.getElementById('cheatWarning').innerText = `Số lần vi phạm chuyển tab: ${cheatCount}/${maxAllowed}`;
-          if (cheatCount >= maxAllowed) {
-            alert(`Bạn đã vi phạm quy chế chuyển tab quá ${maxAllowed} lần! Bài thi sẽ tự động nộp.`);
-            submitExam(true);
-          } else {
-            alert(`Cảnh báo gian lận (${cheatCount}/${maxAllowed}): Bạn vừa rời khỏi màn hình làm bài!`);
-          }
-        }
-      });
-    }
-
-    function startTimer() {
-      timerInterval = setInterval(() => {
-        timeRemaining--;
-        const mins = Math.floor(timeRemaining / 60);
-        const secs = timeRemaining % 60;
-        document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        
-        if (timeRemaining <= 0) {
-          clearInterval(timerInterval);
-          alert('Hết giờ làm bài!');
-          submitExam(true);
-        }
-      }, 1000);
-    }
-
-    function submitExam(autoSubmitted = false) {
-      clearInterval(timerInterval);
-
-      let score = 0;
-      questions.forEach((q, idx) => {
-        const selected = document.querySelector(`input[name="question_${idx}"]:checked`);
-        if (selected && parseInt(selected.value) === q.answer) {
-          score += (10 / questions.length);
-        }
-      });
-      score = Math.round(score * 100) / 100;
-
-      document.getElementById('examCard').classList.add('hidden');
-      document.getElementById('resultCard').classList.remove('hidden');
-      document.getElementById('finalScore').innerText = `${score} / 10`;
-
-      const payload = {
-        studentId: studentInfo.id,
-        studentName: studentInfo.name,
-        studentClass: studentInfo.class,
-        score: score,
-        cheatCount: cheatCount,
-        autoSubmitted: autoSubmitted,
-        submittedAt: new Date().toLocaleString('vi-VN')
-      };
-
-      const webhookUrl = examConfig.webhookUrl || "https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec";
-
-      fetch(webhookUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(() => {
-        document.getElementById('submitStatus').innerText = "Đã lưu kết quả thành công vào hệ thống!";
-        document.getElementById('submitStatus').className = "text-sm text-green-600 font-semibold";
-      }).catch(err => {
-        document.getElementById('submitStatus').innerText = "Lỗi kết nối bảng điểm! Vui lòng báo quản trị viên.";
-        document.getElementById('submitStatus').className = "text-sm text-red-600 font-semibold";
-      });
-    }
-  </script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
