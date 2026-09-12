@@ -1,7 +1,20 @@
 import { getConfig } from './config.js';
 import { loadExamLibrary } from './library.js';
 
-// 1. Hàm đọc văn bản thuần từ file .docx
+// Hàm cập nhật trạng thái Progress Bar
+function updateProgress(percent, statusText) {
+  const container = document.getElementById('progressContainer');
+  const bar = document.getElementById('progressBar');
+  const percentTxt = document.getElementById('progressPercent');
+  const statusTxt = document.getElementById('progressStatus');
+
+  if (container) container.style.display = 'block';
+  if (bar) bar.style.width = `${percent}%`;
+  if (percentTxt) percentTxt.textContent = `${percent}%`;
+  if (statusTxt) statusTxt.textContent = statusText;
+}
+
+// 1. Hàm đọc văn bản từ file Word .docx
 async function readDocxContent(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -15,15 +28,14 @@ async function readDocxContent(file) {
         .then(result => resolve(result.value))
         .catch(err => reject(new Error('Không thể đọc file .docx: ' + err.message)));
     };
-    reader.onerror = err => reject(new Error('Lỗi đọc file từ thiết bị: ' + err.message));
+    reader.onerror = err => reject(new Error('Lỗi đọc file: ' + err.message));
     reader.readAsArrayBuffer(file);
   });
 }
 
-// 2. Hàm gửi prompt cho Gemini AI bóc tách câu hỏi
+// 2. Hàm gửi Gemini AI API với cơ chế Timeout (60s)
 async function parseQuestionsWithGemini(rawText, apiKey, targetModel) {
-  // Ưu tiên model truyền vào, nếu không có sẽ tự dùng gemini-3.6-flash
-  const activeModelName = targetModel || 'gemini-3.6-flash';
+  const activeModelName = targetModel || 'gemini-2.5-flash';
 
   const prompt = `Bạn là một trợ lý AI chuyên trích xuất đề thi. 
 Hãy đọc đoạn văn bản đề thi dưới đây và chuyển đổi toàn bộ thành danh sách câu hỏi trắc nghiệm theo định dạng JSON Array thuần túy (KHÔNG chứa ký tự format markdown như \`\`\`json, KHÔNG giải thích thêm).
@@ -34,31 +46,43 @@ Mỗi câu hỏi phải theo đúng định dạng JSON Object sau:
   "options": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
   "answer": 0
 }
-(Chú thích: "answer" là chỉ số index của đáp án đúng: 0 tương ứng với A, 1 tương ứng với B, 2 tương ứng với C, 3 tương ứng với D. Nếu không xác định được đáp án đúng, hãy mặc định để 0).
+(Chú thích: "answer" là chỉ số index của đáp án đúng: 0 tương ứng với A, 1 tương ứng với B, 2 tương ứng với C, 3 tương ứng với D).
 
 Nội dung đề thi gốc:
 ${rawText}`;
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModelName}:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }]
-    })
-  });
+  // Cấu hình ngắt kết nối nếu quá 60 giây
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  if (!response.ok) {
-    const errData = await response.json();
-    throw new Error(`Lỗi Gemini API (${activeModelName}): ${errData.error?.message || response.statusText}`);
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${activeModelName}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(`Lỗi Gemini API (${activeModelName}): ${errData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    return JSON.parse(aiText);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Quá thời gian phản hồi ( Timeout 60s ). Model ${activeModelName} phản hồi chậm hoặc bị treo.`);
+    }
+    throw err;
   }
-
-  const data = await response.json();
-  let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
-
-  // Làm sạch chuỗi JSON trả về
-  aiText = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-  return JSON.parse(aiText);
 }
 
 // 3. Module chính điều khiển tiến trình trích xuất
@@ -80,31 +104,54 @@ export function initExtractorModule() {
     if (!config.geminiKey) return alert('Vui lòng nhập Gemini API Key ở Mục 1!');
     if (!config.ghToken) return alert('Vui lòng nhập GitHub Personal Access Token ở Mục 1!');
 
-    // Lấy tên Model từ cấu hình (Ví dụ: gemini-3.6-flash)
-    const currentModel = config.geminiModel || 'gemini-3.6-flash';
-
+    const currentModel = config.geminiModel || 'gemini-2.5-flash';
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.innerText;
     btn.disabled = true;
 
+    // Giả lập chạy tiến độ mượt mà khi gọi AI
+    let progressInterval = null;
+
     try {
-      // Tiến trình 1: Đọc file Word
-      btn.innerText = '⏳ 1/3. Đang đọc file Word...';
+      // ----------------------------------------------------
+      // BƯỚC 1: Đọc file Word (0% -> 25%)
+      // ----------------------------------------------------
+      updateProgress(10, '⏳ 1/3. Đang đọc nội dung file Word...');
       const rawText = await readDocxContent(fileInput.files[0]);
       if (!rawText.trim()) throw new Error('File Word rỗng hoặc không chứa văn bản!');
+      updateProgress(25, '✅ Đã đọc xong file Word.');
 
-      // Tiến trình 2: Trích xuất câu hỏi bằng AI
-      btn.innerText = `🤖 2/3. Gemini (${currentModel}) đang phân tích câu hỏi...`;
+      // ----------------------------------------------------
+      // BƯỚC 2: Gọi Gemini AI (25% -> 80%)
+      // ----------------------------------------------------
+      let currentPercent = 25;
+      updateProgress(currentPercent, `🤖 2/3. Gemini (${currentModel}) đang phân tích câu hỏi...`);
+
+      // Tăng % tự động mỗi 500ms để người dùng biết hệ thống vẫn chạy
+      progressInterval = setInterval(() => {
+        if (currentPercent < 80) {
+          currentPercent += 2;
+          updateProgress(currentPercent, `🤖 2/3. Gemini (${currentModel}) đang phân tích câu hỏi...`);
+        }
+      }, 500);
+
       const questions = await parseQuestionsWithGemini(rawText, config.geminiKey, currentModel);
+      clearInterval(progressInterval);
 
-      // Tiến trình 3: Chuẩn hóa tên file JSON (ĐCSTH 1 -> dcsth_1.json)
+      updateProgress(85, `✅ AI trích xuất xong ${questions.length} câu hỏi!`);
+
+      // ----------------------------------------------------
+      // BƯỚC 3: Tạo File & Đẩy lên GitHub (85% -> 100%)
+      // ----------------------------------------------------
+      updateProgress(90, '☁️ 3/3. Đang lưu file JSON lên GitHub...');
+
       const cleanFileName = title
         .toLowerCase()
         .replace(/đ/g, "d")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-z0-9]/g, "_")
-        .replace(/^_+|_+$/g, ""); // Xóa bỏ gạch dưới ở đầu tên file
+        .replace(/^_+|_+$/g, "");
 
       const examData = {
         title,
@@ -117,8 +164,6 @@ export function initExtractorModule() {
       const path = `exams/${cleanFileName}.json`;
       const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(examData, null, 2))));
 
-      // Tiến trình 4: Đẩy dữ liệu lên GitHub
-      btn.innerText = '☁️ 3/3. Đang lưu lên GitHub...';
       const ghUrl = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/${path}`;
 
       let sha = null;
@@ -149,10 +194,16 @@ export function initExtractorModule() {
         throw new Error(`Lỗi GitHub API: ${errJson.message || putRes.statusText}`);
       }
 
-      alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và lưu vào file exams/${cleanFileName}.json`);
-      loadExamLibrary();
+      updateProgress(100, '🎉 Hoàn tất quá trình trích xuất và lưu thư viện!');
+      
+      setTimeout(() => {
+        alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và tạo file exams/${cleanFileName}.json`);
+        loadExamLibrary();
+      }, 300);
 
     } catch (err) {
+      if (progressInterval) clearInterval(progressInterval);
+      updateProgress(0, `❌ Lỗi: ${err.message}`);
       alert(`Đã xảy ra lỗi: ${err.message}`);
     } finally {
       btn.disabled = false;
