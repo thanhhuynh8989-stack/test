@@ -4,12 +4,14 @@ let examData = null;
 let timerInterval = null;
 let timeLeft = 0;
 let studentInfo = {};
+let violations = 0;
+let isExamSubmitted = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const examId = urlParams.get('id');
+  const rawExamId = urlParams.get('id');
 
-  if (!examId) {
+  if (!rawExamId) {
     document.body.innerHTML = `
       <div style="max-width: 500px; margin: 80px auto; padding: 24px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; color: #991b1b; text-align: center;">
         <h3>⚠️ Lỗi đường dẫn</h3>
@@ -18,20 +20,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Tự động loại bỏ đuôi .json nếu URL truyền dư (Tránh lỗi .json.json)
   const cleanExamId = rawExamId.replace(/\.json$/i, '');
 
-  // 1. Tải trước dữ liệu bài thi (không hiển thị ra màn hình)
   try {
-    const res = await fetch(`exams/${examId}.json`);
-    if (!res.ok) throw new Error('Không thể tải dữ liệu đề thi từ hệ thống!');
+    const res = await fetch(`exams/${cleanExamId}.json`);
+    if (!res.ok) throw new Error(`Không tìm thấy file đề thi "exams/${cleanExamId}.json" trên hệ thống.`);
     examData = await res.json();
   } catch (err) {
     alert(`Lỗi: ${err.message}`);
     return;
   }
 
-  // 2. Lắng nghe sự kiện người dùng điền Form & Bấm "Bắt Đầu Làm Bài"
+  // Lắng nghe sự kiện Bắt đầu làm bài
   document.getElementById('studentForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
@@ -41,24 +41,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       class: document.getElementById('svClass').value.trim()
     };
 
-    // Cập nhật giao diện thông tin Sinh viên & Đề thi
     document.getElementById('displayName').textContent = studentInfo.name;
     document.getElementById('displayId').textContent = studentInfo.id;
     document.getElementById('displayClass').textContent = studentInfo.class;
     document.getElementById('examTitleText').textContent = examData.title;
 
-    // Ẩn Form đăng nhập -> Hiện Khung Bài Thi
     document.getElementById('studentModal').style.display = 'none';
     document.getElementById('examContainer').style.display = 'block';
 
-    // Khởi tạo thời gian, Render câu hỏi và bắt đầu đếm ngược
     timeLeft = (examData.duration || 15) * 60;
+    
     renderQuestions();
     updateProgressTracker();
+    updateViolationTracker();
     startTimer();
+    setupAntiCheat(); // Kích hoạt cảnh báo chuyển tab
   });
 
-  // 3. Sự kiện Nộp bài
+  // Lắng nghe sự kiện Nộp bài
   document.getElementById('quizForm').addEventListener('submit', (e) => {
     e.preventDefault();
     if (confirm('Bạn có chắc chắn muốn nộp bài thi?')) {
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-// Hiển thị danh sách câu hỏi
+// Render câu hỏi
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
   container.innerHTML = '';
@@ -92,11 +92,10 @@ function renderQuestions() {
     container.appendChild(qCard);
   });
 
-  // Lắng nghe thao tác chọn đáp án để cập nhật số câu đã làm ngay lập tức
   container.addEventListener('change', updateProgressTracker);
 }
 
-// Cập nhật thanh tiến độ "Số câu đã làm / Tổng số câu"
+// Tiến độ làm bài
 function updateProgressTracker() {
   const totalQuestions = examData.questions.length;
   let answeredCount = 0;
@@ -112,7 +111,35 @@ function updateProgressTracker() {
   }
 }
 
-// Chạy thời gian đếm ngược
+// Cập nhật số lần vi phạm
+function updateViolationTracker() {
+  const maxViolations = examData.maxViolations || 3;
+  const trackerEl = document.getElementById('violationTracker');
+  if (trackerEl) {
+    trackerEl.textContent = `Vi phạm: ${violations}/${maxViolations}`;
+  }
+}
+
+// TÍNH NĂNG GIÁM SÁT CHUYỂN TAB / RỜI MÀN HÌNH
+function setupAntiCheat() {
+  const maxViolations = examData.maxViolations || 3;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !isExamSubmitted) {
+      violations++;
+      updateViolationTracker();
+
+      if (violations >= maxViolations) {
+        alert(`🚨 CẢNH BÁO VI PHẠM: Bạn đã rời khỏi màn hình làm bài ${violations}/${maxViolations} lần. Hệ thống tự động nộp bài!`);
+        finishExam();
+      } else {
+        alert(`⚠️ CẢNH BÁO VI PHẠM (${violations}/${maxViolations}): Nghiêm cấm chuyển tab hoặc rời khỏi trang kiểm tra trong khi làm bài!`);
+      }
+    }
+  });
+}
+
+// Đếm ngược thời gian
 function startTimer() {
   const timerDisplay = document.getElementById('timerDisplay');
 
@@ -138,6 +165,8 @@ function startTimer() {
 
 // Xử lý nộp bài
 async function finishExam() {
+  if (isExamSubmitted) return;
+  isExamSubmitted = true;
   clearInterval(timerInterval);
 
   let correctCount = 0;
@@ -153,7 +182,6 @@ async function finishExam() {
   const score = ((correctCount / totalQuestions) * 10).toFixed(2);
   const config = getConfig();
 
-  // Gửi điểm lên Webhook nếu có cấu hình
   if (config.webhookUrl) {
     try {
       await fetch(config.webhookUrl, {
@@ -167,6 +195,7 @@ async function finishExam() {
           examTitle: examData.title,
           score: score,
           correctCount: `${correctCount}/${totalQuestions}`,
+          violations: violations,
           submittedAt: new Date().toLocaleString('vi-VN')
         })
       });
@@ -175,7 +204,6 @@ async function finishExam() {
     }
   }
 
-  // Báo kết quả thi
   document.getElementById('examContainer').innerHTML = `
     <div style="background: #fff; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; max-width: 500px; margin: 40px auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
       <h2 style="color: #059669; margin-top: 0;">🎉 Hoàn Thành Bài Thi!</h2>
@@ -183,7 +211,8 @@ async function finishExam() {
       <div style="font-size: 38px; font-weight: bold; color: #2563eb; margin: 20px 0;">
         ${score} <span style="font-size: 18px; color: #64748b;">/ 10 điểm</span>
       </div>
-      <p style="font-size: 15px; color: #475569;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
+      <p style="font-size: 15px; color: #475569; margin-bottom: 8px;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
+      <p style="font-size: 14px; color: #dc2626;">Số lần vi phạm (chuyển tab): <strong>${violations}</strong> lần</p>
     </div>
   `;
 }
