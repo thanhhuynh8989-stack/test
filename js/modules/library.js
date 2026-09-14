@@ -1,10 +1,11 @@
-import { getConfig } from './config.js';
+import { getConfig, getCurrentUser } from './config.js';
 
 export async function loadExamLibrary() {
   const tbody = document.getElementById('libraryTableBody');
   if (!tbody) return;
 
   const config = getConfig();
+  const currentUser = getCurrentUser();
 
   if (!config.ghOwner || !config.ghRepo) {
     tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">Vui lòng nhập GitHub Owner & Repo ở Mục 1!</td></tr>`;
@@ -49,6 +50,7 @@ export async function loadExamLibrary() {
           fileName: file.name,
           sha: file.sha,
           title: examData.title || file.name,
+          createdBy: examData.createdBy || 'Unknown', // 🔥 Đọc tài khoản người tạo đề
           questionCount: examData.questions ? examData.questions.length : 0,
           duration: examData.duration || 15,
           size: (file.size / 1024).toFixed(1) + ' KB',
@@ -60,6 +62,7 @@ export async function loadExamLibrary() {
           fileName: file.name,
           sha: file.sha,
           title: file.name,
+          createdBy: 'Unknown',
           questionCount: 0,
           duration: '--',
           size: (file.size / 1024).toFixed(1) + ' KB',
@@ -69,12 +72,25 @@ export async function loadExamLibrary() {
       }
     });
 
-    const examList = await Promise.all(examPromises);
+    let examList = await Promise.all(examPromises);
+
+    // 🔥 PHÂN QUYỀN HIỂN THỊ: Nếu người dùng là Giảng viên -> Chỉ lọc hiển thị các đề do Giảng viên đó tạo
+    if (currentUser && currentUser.role === 'lecturer') {
+      examList = examList.filter(exam => exam.createdBy === currentUser.username);
+    }
+
+    if (examList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">Không có đề thi nào trong danh sách của bạn.</td></tr>`;
+      return;
+    }
+
     const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
 
     tbody.innerHTML = examList.map(exam => {
       const examUrl = `${baseUrl}exam.html?id=${exam.examId}`;
       const safeTitle = escapeHTML(exam.title);
+      const safeCreatedBy = escapeHTML(exam.createdBy);
+
       return `
         <tr>
           <td>
@@ -82,7 +98,7 @@ export async function loadExamLibrary() {
               ${safeTitle}
             </div>
             <div style="font-size: 12px; color: #64748b;">
-              📄 File: <code>${exam.fileName}</code> | 📝 ${exam.questionCount} câu | ⏱️ ${exam.duration} phút
+              📄 File: <code>${exam.fileName}</code> | 👤 Tạo bởi: <b>${safeCreatedBy}</b> | 📝 ${exam.questionCount} câu | ⏱️ ${exam.duration} phút
             </div>
           </td>
           <td>${exam.size}</td>
