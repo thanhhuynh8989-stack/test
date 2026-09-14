@@ -167,7 +167,12 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       throw new Error('Chưa cấu hình URL Google Apps Script!');
     }
 
-    const res = await fetch(`${webhookUrl}?action=getResults&examId=${encodeURIComponent(examId)}&_t=${Date.now()}`);
+    // 1. Chuẩn hóa examId: Loại bỏ đuôi .json và khoảng trắng thừa
+    const cleanExamId = (examId || '').replace(/\.json$/i, '').trim();
+
+    // 2. Gửi đồng thời cleanExamId và examTitle để Google Sheet tra cứu linh hoạt
+    const requestUrl = `${webhookUrl}?action=getResults&examId=${encodeURIComponent(cleanExamId)}&examTitle=${encodeURIComponent(examTitle || '')}&_t=${Date.now()}`;
+    const res = await fetch(requestUrl);
     const result = await res.json();
 
     if (result.status !== 'success' || !Array.isArray(result.data) || result.data.length === 0) {
@@ -177,8 +182,14 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
 
     let maxAnswersCount = 0;
 
-    // Định dạng dữ liệu các cột cho bảng Excel
+    // 3. Định dạng dữ liệu các cột cho bảng Excel
     const excelRows = result.data.map((row, index) => {
+      // Tự động Parse mảng đáp án nếu Google Sheet trả về dạng chuỗi String
+      let answersArr = row.studentAnswers;
+      if (typeof answersArr === 'string') {
+        try { answersArr = JSON.parse(answersArr); } catch(e) { answersArr = []; }
+      }
+
       const baseRow = {
         "STT": index + 1,
         "Thời gian nộp": row.timestamp || '',
@@ -193,12 +204,12 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
         "Trạng thái nộp": row.status || ''
       };
 
-      // 💥 Tự động thêm các cột chi tiết từng câu: Câu 1, Câu 2... Câu N
-      if (Array.isArray(row.studentAnswers) && row.studentAnswers.length > 0) {
-        if (row.studentAnswers.length > maxAnswersCount) {
-          maxAnswersCount = row.studentAnswers.length;
+      // Tự động thêm các cột chi tiết từng câu: Câu 1, Câu 2... Câu N
+      if (Array.isArray(answersArr) && answersArr.length > 0) {
+        if (answersArr.length > maxAnswersCount) {
+          maxAnswersCount = answersArr.length;
         }
-        row.studentAnswers.forEach((ans, qIdx) => {
+        answersArr.forEach((ans, qIdx) => {
           baseRow[`Câu ${qIdx + 1}`] = ans || '';
         });
       }
@@ -206,7 +217,7 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       return baseRow;
     });
 
-    // Tạo file Excel với SheetJS
+    // 4. Tạo file Excel với SheetJS
     const worksheet = XLSX.utils.json_to_sheet(excelRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Kết quả bài thi");
@@ -228,15 +239,14 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       { wch: 20 }   // Trạng thái
     ];
 
-    // 💥 Tự động thêm độ rộng (width: 20) cho các cột câu hỏi phụ
     for (let i = 0; i < maxAnswersCount; i++) {
       baseCols.push({ wch: 20 });
     }
 
     worksheet["!cols"] = baseCols;
 
-    const cleanExamId = (examId || 'KetQua').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `KetQua_${cleanExamId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const safeFileName = (cleanExamId || 'KetQua').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `KetQua_${safeFileName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
     
     XLSX.writeFile(workbook, fileName);
 
