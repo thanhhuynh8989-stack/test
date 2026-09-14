@@ -1,0 +1,280 @@
+{
+  "examId": "sinh_h_c__c_1_3267",
+  "title": "Sinh học ĐC 1",
+  "duration": 3,
+  "maxViolations": 2,
+  "createdAt": "2026-09-14T09:18:43.267Z",
+  "totalQuestions": 10,
+  "questions": [
+    {
+      "id": "q_1789377399604_2f0d2",
+      "question": "Bào quan của tế bào được định vị trong ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_p1qbd",
+          "text": "Nhân con",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_4z1ci",
+          "text": "Tế bào chất",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_xyeup",
+          "text": "Lục lạp",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_x55go",
+          "text": "Ty thể",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_uekbl",
+      "question": "Đặc điểm khác biệt của tế bào nhân sơ (prokaryote) và tế bào nhân chuẩn (eukaryote) là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_s30p1",
+          "text": "Protein",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_754hm",
+          "text": "Nhân",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_ikeaz",
+          "text": "Màng plasma",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_fq3b1",
+          "text": "AND",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_95j12",
+      "question": "Ty thể KHÔNG có mặt ở ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_h1snp",
+          "text": "Vi khuẩn",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_au2pc",
+          "text": "Thực vật",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_bkp03",
+          "text": "Nấm",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_uvxfd",
+          "text": "Động vật có xương sống",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_igu8b",
+      "question": "Hợp chất nào sau đây KHÔNG có trong thành phần màng tế bào ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_hyw22",
+          "text": "Phospholipids",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_gcww2",
+          "text": "Cholesterol",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_falyw",
+          "text": "Glycolipid",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_phxx5",
+          "text": "Proline",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_irnt1",
+      "question": "Thực bào và ẩm bào là các thuật ngữ của hiện tượng được mô tả sau:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_pnu0q",
+          "text": "Ăn các chất lơ lửng",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_l28sj",
+          "text": "Nhập bào",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_3qtf0",
+          "text": "Động vật ăn cỏ",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_s6ysb",
+          "text": "Bẫy mô",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_esaa8",
+      "question": "Phát biểu nào sau đây về lục lạp là KHÔNG đúng ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_x717i",
+          "text": "Lục lạp có một chồng các lớp màng trong và được bao bọc bởi lớp màng kép",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_eapgy",
+          "text": "Lục lạp có chứa ADN của riêng nó",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_rmv48",
+          "text": "Lục lạp được xem là bắt nguồn từ vi khuẩn",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_dgyx1",
+          "text": "Lục lạp có mặt ở tất cả các tế bào nhân chuẩn",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_ilu2h",
+      "question": "Vai trò chính của màng sinh chất:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_gda9f",
+          "text": "Chống lại áp suất thẩm thấu của môi trường bên ngoài.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_28u4u",
+          "text": "Trao đổi chất, thông tin giữa tế bào và môi trường",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_tkrfc",
+          "text": "Tạo khung vững, cứng cho tế bào",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_4m52d",
+          "text": "Bảo vệ, duy trì hình dạng tế bào",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_1nxg4",
+      "question": "Thành phần chính cấu tạo nên thành tế bào vi khuẩn Gram dương ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_gx0py",
+          "text": "Phospholipid kép",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_11ioh",
+          "text": "Peptidoglycan",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_z64bm",
+          "text": "Polysaccharide",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_opnky",
+          "text": "Lipopolysaccharide",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_7od2f",
+      "question": "Thể nhân của tế bào Prokaryote KHÔNG có đặc điểm ?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_f6xul",
+          "text": "Chưa có màng nhân bao bọc thể nhân",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_fj3mk",
+          "text": "ADN xoắn kép, dạng trần liên kết với protein.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789377399605_nax54",
+          "text": "Chỉ có một nhiễm sắc thể duy nhất",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_wihnd",
+          "text": "Là nơi chứa đựng thông tin di truyền",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789377399605_jvbe5",
+      "question": "Ở tế bào Eukaryote, ribosome có mặt nhiều nhất tại:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789377399605_jixcm",
+          "text": "Màng nhân",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_84tcy",
+          "text": "Ty thể",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_1j7bz",
+          "text": "Nhân con",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789377399605_fs9i0",
+          "text": "Lưới nội chất có hạt",
+          "isCorrect": true
+        }
+      ]
+    }
+  ]
+}
