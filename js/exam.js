@@ -6,6 +6,7 @@ let timeLeft = 0;
 let studentInfo = {};
 let violations = 0;
 let isExamSubmitted = false;
+let cleanExamId = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Loại bỏ đuôi .json nếu URL truyền dư
-  const cleanExamId = rawExamId.replace(/\.json$/i, '');
+  cleanExamId = rawExamId.replace(/\.json$/i, '');
 
   try {
     const res = await fetch(`exams/${cleanExamId}.json`);
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateProgressTracker();
       updateViolationTracker();
       startTimer();
-      setupAntiCheat(); // Kích hoạt giám sát chuyển tab
+      setupAntiCheat();
     });
   }
 
@@ -134,7 +135,7 @@ function updateViolationTracker() {
   }
 }
 
-// TÍNH NĂNG GIÁM SÁT CHUYỂN TAB / RỜI MÀN HÌNH
+// Giám sát chuyển tab / rời màn hình
 function setupAntiCheat() {
   const maxViolations = examData?.maxViolations || 3;
 
@@ -185,12 +186,16 @@ async function finishExam() {
   clearInterval(timerInterval);
 
   let correctCount = 0;
+  let answeredCount = 0;
   const totalQuestions = examData.questions.length;
 
   examData.questions.forEach((q, index) => {
     const selected = document.querySelector(`input[name="q_${index}"]:checked`);
-    if (selected && parseInt(selected.value) === q.answer) {
-      correctCount++;
+    if (selected) {
+      answeredCount++;
+      if (parseInt(selected.value) === q.answer) {
+        correctCount++;
+      }
     }
   });
 
@@ -198,22 +203,33 @@ async function finishExam() {
   const config = getConfig();
   const targetWebhook = examData.webhookUrl || config.webhookUrl;
 
+  const maxViolations = examData?.maxViolations || 3;
+  let submitStatus = "Tự nộp";
+  if (violations >= maxViolations) {
+    submitStatus = "Bị hủy do vi phạm";
+  } else if (timeLeft <= 0) {
+    submitStatus = "Nộp do hết thời gian";
+  }
+
+  const payload = {
+    examId: cleanExamId,
+    examTitle: examData.title || '',
+    studentId: studentInfo.id || '',
+    fullName: studentInfo.name || '',
+    email: studentInfo.class || '',
+    answeredCount: answeredCount,
+    totalQuestions: totalQuestions,
+    score: parseFloat(score),
+    violations: violations,
+    status: submitStatus
+  };
+
   if (targetWebhook && targetWebhook.startsWith('http')) {
     try {
       await fetch(targetWebhook, {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentName: studentInfo.name,
-          studentId: studentInfo.id,
-          studentClass: studentInfo.class,
-          examTitle: examData.title,
-          score: score,
-          correctCount: `${correctCount}/${totalQuestions}`,
-          violations: violations,
-          submittedAt: new Date().toLocaleString('vi-VN')
-        })
+        body: JSON.stringify(payload)
       });
     } catch (err) {
       console.error('Lỗi gửi Webhook:', err);
@@ -230,33 +246,16 @@ async function finishExam() {
           ${score} <span style="font-size: 18px; color: #64748b;">/ 10 điểm</span>
         </div>
         <p style="font-size: 15px; color: #475569; margin-bottom: 8px;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
-        <p style="font-size: 14px; color: #dc2626;">Số lần vi phạm (chuyển tab): <strong>${violations}</strong> lần</p>
+        <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">Số lần vi phạm: <strong>${violations}</strong> | Trạng thái: <strong>${submitStatus}</strong></p>
+        <button onclick="window.close()" class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Đóng Màn Hình</button>
       </div>
     `;
   }
 }
 
-// Hàm mã hóa ký tự đặc biệt
+// Mã hóa ký tự đặc biệt phòng chống XSS
 function escapeHTML(str) {
   return String(str || '').replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
 }
-
-const payload = {
-  examId: examData.examId,            // VD: "dcsth_1"
-  examTitle: examData.title,          // VD: "Đề Kiểm Tra Sinh Học G"
-  studentId: "SV123456",
-  fullName: "Nguyễn Văn A",
-  email: "CNTT-K45",                  // Email hoặc Lớp
-  answeredCount: 38,                  // Số câu sinh viên chọn đáp án
-  totalQuestions: 40,                 // Tổng số câu của đề
-  score: 9.5,                         // Điểm số hệ 10
-  violations: 1,                      // Số lần chuyển tab/vi phạm
-  status: "Tự nộp"                    // "Tự nộp", "Cưỡng chế nộp", hoặc "Nộp do hết thời gian"
-};
-
-fetch(webhookUrl, {
-  method: 'POST',
-  body: JSON.stringify(payload)
-});
