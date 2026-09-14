@@ -54,18 +54,26 @@ async function handleWordUpload() {
 }
 
 // 2. Chuyển đổi HTML sang mảng Object Câu hỏi
+// Thay thế hàm parseQuestionsFromHtml trong extractor.js bằng hàm này:
 function parseQuestionsFromHtml(html) {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
-  const paragraphs = Array.from(tempDiv.querySelectorAll('p, li')).map(p => p.textContent.trim()).filter(Boolean);
 
+  // Lấy tất cả các đoạn văn bản hoặc phần tử danh sách
+  const elements = Array.from(tempDiv.querySelectorAll('p, li'));
   const questions = [];
   let currentQ = null;
 
   const qRegex = /^(Câu|Cau)\s*\d+[:.]/i;
   const optRegex = /^([A-D])[\.:\)]\s*(.*)/i;
 
-  paragraphs.forEach(text => {
+  elements.forEach(el => {
+    const text = el.textContent.trim();
+    if (!text) return;
+
+    // Kiểm tra xem đoạn văn này có chứa chữ bôi đậm hoặc gạch chân không
+    const isFormattedCorrect = !!el.querySelector('strong, b, u');
+
     if (qRegex.test(text)) {
       if (currentQ) questions.push(currentQ);
       currentQ = {
@@ -80,7 +88,7 @@ function parseQuestionsFromHtml(html) {
         currentQ.options.push({
           id: 'opt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
           text: matchOpt[2].trim(),
-          isCorrect: false
+          isCorrect: isFormattedCorrect // Tự động đánh dấu nếu đáp án trong Word được Bôi đậm/Gạch chân
         });
       } else if (currentQ.options.length === 0) {
         currentQ.question += '\n' + text;
@@ -90,6 +98,7 @@ function parseQuestionsFromHtml(html) {
 
   if (currentQ) questions.push(currentQ);
 
+  // Đảm bảo mỗi câu luôn đủ 4 lựa chọn A, B, C, D
   questions.forEach(q => {
     while (q.options.length < 4) {
       q.options.push({
@@ -183,21 +192,29 @@ function addNewQuestion() {
   renderPreviewUI();
 }
 
-// 4. AI gợi ý đáp án
+// 4. Tích hợp AI (Gemini API) giải các câu CHƯA CÓ đáp án
 async function handleAiSuggestAnswers() {
   const config = getConfig();
-  const apiKey = config.geminiApiKey;
+  
+  // Sửa đúng tên thuộc tính từ config.js (geminiKey & geminiModel)
+  const apiKey = config.geminiKey; 
+  const modelName = config.geminiModel || 'gemini-1.5-flash';
 
   if (!apiKey) {
-    alert('Vui lòng nhập Gemini API Key trong Mục Cấu hình hệ thống!');
+    alert('Vui lòng nhập Gemini API Key trong "Mục Cấu hình hệ thống" và nhấn Lưu!');
     return;
   }
 
+  // Lọc danh sách các câu chưa được chọn đáp án đúng
   const unselectedQuestions = [];
   currentExamData.forEach((q, index) => {
     const hasCorrect = q.options.some(opt => opt.isCorrect);
     if (!hasCorrect) {
-      unselectedQuestions.push({ index: index, question: q.question, options: q.options.map(o => o.text) });
+      unselectedQuestions.push({ 
+        index: index, 
+        question: q.question, 
+        options: q.options.map(o => o.text) 
+      });
     }
   });
 
@@ -207,22 +224,33 @@ async function handleAiSuggestAnswers() {
   }
 
   const btnAi = document.getElementById('btnAiSuggest');
-  const originalText = btnAi.textContent;
-  btnAi.disabled = true;
-  btnAi.textContent = `🤖 AI đang giải ${unselectedQuestions.length} câu...`;
+  const originalText = btnAi ? btnAi.textContent : '';
+  if (btnAi) {
+    btnAi.disabled = true;
+    btnAi.textContent = `🤖 AI đang giải ${unselectedQuestions.length} câu chưa có đáp án...`;
+  }
 
   try {
     const prompt = `Bạn là một chuyên gia giáo dục. Trả về kết quả dưới dạng mảng JSON duy nhất: [{ "index": số_thứ_tự_câu, "correctIndex": chỉ_số_đáp_án_đúng_từ_0_đến_3 }].\n\nDanh sách câu hỏi:\n${JSON.stringify(unselectedQuestions, null, 2)}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    // Sử dụng linh hoạt modelName lấy từ Cấu hình hệ thống
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
     });
 
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error?.message || `Lỗi HTTP ${response.status}`);
+    }
+
     const data = await response.json();
-    const replyText = data.candidates[0].content.parts[0].text;
+    const replyText = data.candidates[0]?.content?.parts[0]?.text || '';
     
+    // Trích xuất mảng JSON từ kết quả AI trả về
     const jsonMatch = replyText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const results = JSON.parse(jsonMatch[0]);
@@ -234,7 +262,7 @@ async function handleAiSuggestAnswers() {
         }
       });
       renderPreviewUI();
-      alert(`✨ AI đã gợi ý xong đáp án cho ${results.length} câu!`);
+      alert(`✨ AI đã gợi ý xong đáp án cho ${results.length} câu! Hãy kiểm tra lại trước khi lưu.`);
     } else {
       throw new Error('AI không trả về đúng định dạng JSON.');
     }
@@ -242,11 +270,12 @@ async function handleAiSuggestAnswers() {
   } catch (err) {
     alert('Lỗi khi gọi Gemini AI: ' + err.message);
   } finally {
-    btnAi.disabled = false;
-    btnAi.textContent = originalText;
+    if (btnAi) {
+      btnAi.disabled = false;
+      btnAi.textContent = originalText;
+    }
   }
 }
-
 // 5. Lưu đề thi (Vừa lưu lên GitHub vừa tải về máy)
 async function saveExamToSystem() {
   if (currentExamData.length === 0) {
