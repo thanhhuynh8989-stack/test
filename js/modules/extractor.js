@@ -213,10 +213,11 @@ export function initExtractorModule() {
 
       updateProgress(100, '🎉 Hoàn tất quá trình trích xuất và lưu thư viện!');
 
-      setTimeout(() => {
-        alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và tạo file exams/${cleanFileName}.json`);
-        loadExamLibrary(); // Tự động làm mới thư viện đề thi
-      }, 300);
+      // 🔥 1. Gọi reload danh sách thư viện ngay lập tức (Chờ render xong)
+      await loadExamLibrary();
+
+      // 🔥 2. Hiện thông báo sau khi bảng đã hiển thị file mới
+      alert(`Thành công! Đã trích xuất ${questions.length} câu hỏi và tạo file exams/${cleanFileName}.json`);
 
     } catch (err) {
       if (progressInterval) clearInterval(progressInterval);
