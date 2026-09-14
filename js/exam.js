@@ -228,9 +228,13 @@ async function finishExam() {
     try {
       await fetch(targetWebhook, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        mode: 'no-cors', // 💥 BẮT BUỘC: Bỏ qua kiểm tra CORS của trình duyệt
+        headers: { 
+          'Content-Type': 'text/plain' // 💥 BẮT BUỘC: Dùng text/plain để không kích hoạt yêu cầu Preflight OPTIONS
+        },
         body: JSON.stringify(payload)
       });
+      console.log('Đã gửi dữ liệu tới Webhook thành công!');
     } catch (err) {
       console.error('Lỗi gửi Webhook:', err);
     }
