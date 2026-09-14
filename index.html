@@ -12,7 +12,7 @@
 <div class="admin-container">
 <header class="admin-header">
 <h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
-<p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
+<p>Quản lý Đề thi trực tuyến và Chống gian lận</p>
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
 <div id="currentUserDisplay" style="font-size: 14px; color: #334155;"></div>
@@ -127,15 +127,19 @@
   
   <!-- Cấu hình tên & thời gian đề thi -->
   <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-    <div style="flex: 2; min-width: 250px;">
-      <label style="font-weight: 600; display: block; margin-bottom: 5px;">Tên bài thi / Đề thi:</label>
-      <input type="text" id="examTitleInput" placeholder="Ví dụ: Đề thi Giữa kỳ Triết học" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-    </div>
-    <div style="flex: 1; min-width: 120px;">
-      <label style="font-weight: 600; display: block; margin-bottom: 5px;">Thời gian (phút):</label>
-      <input type="number" id="examDurationInput" value="15" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-    </div>
+  <div style="flex: 2; min-width: 250px;">
+    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Tên bài thi / Đề thi:</label>
+    <input type="text" id="examTitleInput" placeholder="Ví dụ: Đề thi Giữa kỳ Triết học" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
   </div>
+  <div style="flex: 1; min-width: 120px;">
+    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Thời gian (phút):</label>
+    <input type="number" id="examDurationInput" value="15" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
+  </div>
+  <div style="flex: 1; min-width: 140px;">
+    <label style="font-weight: 600; display: block; margin-bottom: 5px;">Vi phạm tối đa (lần):</label>
+    <input type="number" id="examMaxViolationsInput" value="3" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;" title="Số lần cho phép chuyển tab trước khi tự nộp bài">
+  </div>
+</div>
 
   <!-- Thanh công cụ điều khiển Preview -->
   <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -146,7 +150,7 @@
       🤖 AI Gợi Ý Đáp Án
     </button>
     <button type="button" id="btnSaveExam" class="btn" style="background: #16a34a; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-      💾 Lưu & Xuất Bản Lên Thư Viện (GitHub)
+      💾 Lưu vào Kho
     </button>
   </div>
 
