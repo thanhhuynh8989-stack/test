@@ -59,7 +59,7 @@ function parseQuestionsFromHtml(html) {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
-  // Lấy tất cả các đoạn văn bản hoặc phần tử danh sách
+  // Đọc danh sách thẻ p, li
   const elements = Array.from(tempDiv.querySelectorAll('p, li'));
   const questions = [];
   let currentQ = null;
@@ -71,8 +71,11 @@ function parseQuestionsFromHtml(html) {
     const text = el.textContent.trim();
     if (!text) return;
 
-    // Kiểm tra xem đoạn văn này có chứa chữ bôi đậm hoặc gạch chân không
-    const isFormattedCorrect = !!el.querySelector('strong, b, u');
+    // Kiểm tra xem chữ cái đầu hoặc toàn bộ dòng phương án có được định dạng bôi đậm/gạch chân không
+    const innerHTML = el.innerHTML;
+    const isLetterFormatted = /<(b|strong|u)>(\s*([A-D])[\.:\)])<\/(b|strong|u)>/i.test(innerHTML);
+    const isWholeFormatted = !!el.querySelector('strong, b, u');
+    const isCorrectChoice = isLetterFormatted || isWholeFormatted;
 
     if (qRegex.test(text)) {
       if (currentQ) questions.push(currentQ);
@@ -88,7 +91,7 @@ function parseQuestionsFromHtml(html) {
         currentQ.options.push({
           id: 'opt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
           text: matchOpt[2].trim(),
-          isCorrect: isFormattedCorrect // Tự động đánh dấu nếu đáp án trong Word được Bôi đậm/Gạch chân
+          isCorrect: isCorrectChoice
         });
       } else if (currentQ.options.length === 0) {
         currentQ.question += '\n' + text;
@@ -98,7 +101,6 @@ function parseQuestionsFromHtml(html) {
 
   if (currentQ) questions.push(currentQ);
 
-  // Đảm bảo mỗi câu luôn đủ 4 lựa chọn A, B, C, D
   questions.forEach(q => {
     while (q.options.length < 4) {
       q.options.push({
