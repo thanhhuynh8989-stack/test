@@ -15,14 +15,15 @@ export async function loadExamLibrary() {
 
   try {
     const branch = config.ghBranch || 'main';
-    const url = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/exams?ref=${branch}`;
+    // 🔥 Thêm &_t=${Date.now()} để xóa cache của GitHub API và Trình duyệt
+    const url = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/exams?ref=${branch}&_t=${Date.now()}`;
     
     const headers = {};
     if (config.ghToken && config.ghToken !== '••••••••••••••••') {
       headers['Authorization'] = `token ${config.ghToken}`;
     }
 
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, { headers, cache: 'no-store' });
 
     if (res.status === 404) {
       tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">Chưa có thư mục <b>exams/</b> trên GitHub. Hãy trích xuất đề đầu tiên!</td></tr>`;
@@ -39,14 +40,14 @@ export async function loadExamLibrary() {
       return;
     }
 
-    // Đọc song song nội dung của từng file JSON để lấy Tên bài thi (title) & lưu SHA để xóa
+    // Đọc song song nội dung của từng file JSON (có chống cache)
     const examPromises = jsonFiles.map(async (file) => {
       try {
-        const rawRes = await fetch(file.download_url);
+        const rawRes = await fetch(`${file.download_url}?_t=${Date.now()}`, { cache: 'no-store' });
         const examData = await rawRes.json();
         return {
           fileName: file.name,
-          sha: file.sha, // Mã định danh của file trên GitHub (bắt buộc khi xóa)
+          sha: file.sha,
           title: examData.title || file.name,
           questionCount: examData.questions ? examData.questions.length : 0,
           duration: examData.duration || 15,
@@ -69,8 +70,6 @@ export async function loadExamLibrary() {
     });
 
     const examList = await Promise.all(examPromises);
-
-    // Xác định đường dẫn gốc tới file exam.html
     const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
 
     tbody.innerHTML = examList.map(exam => {
@@ -100,7 +99,7 @@ export async function loadExamLibrary() {
       `;
     }).join('');
 
-    // Gán sự kiện Sao chép Link
+    // Sự kiện Copy Link
     tbody.querySelectorAll('.btn-copy-link').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const url = e.currentTarget.getAttribute('data-url');
@@ -109,7 +108,7 @@ export async function loadExamLibrary() {
       });
     });
 
-    // Gán sự kiện Xóa đề thi
+    // Sự kiện Xóa bài thi
     tbody.querySelectorAll('.btn-delete-exam').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const fileName = e.currentTarget.getAttribute('data-filename');
@@ -128,7 +127,7 @@ export async function loadExamLibrary() {
 }
 
 /**
- * Hàm gọi GitHub API để xóa file JSON
+ * Xóa file JSON và tự động reload danh sách ngay lập tức
  */
 async function deleteExamFile(fileName, sha, title) {
   const config = getConfig();
@@ -160,8 +159,11 @@ async function deleteExamFile(fileName, sha, title) {
       throw new Error(errData.message || res.statusText);
     }
 
+    // 🔥 1. Reload danh sách ngay lập tức
+    await loadExamLibrary();
+
+    // 🔥 2. Thông báo cho người dùng sau khi bảng đã cập nhật xong
     alert(`✅ Đã xóa thành công đề thi: ${title}`);
-    loadExamLibrary(); // Tải lại danh sách sau khi xóa
 
   } catch (err) {
     alert(`❌ Không thể xóa file: ${err.message}`);
