@@ -54,3 +54,20 @@ body {
 .btn-link:hover {
   text-decoration: underline;
 }
+
+/* ==========================================
+   RESPONSIVE BASE (Màn hình điện thoại ≤ 768px)
+   ========================================== */
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+
+  .admin-header {
+    margin-bottom: 16px;
+  }
+
+  .admin-header h1 {
+    font-size: 20px;
+  }
+}
