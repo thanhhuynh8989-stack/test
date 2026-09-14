@@ -12,12 +12,16 @@
     <header class="admin-header">
       <h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
       <p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
-      <a href="exam.html" class="btn-link" target="_blank">Mở Trang Làm Bài &rarr;</a>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
+        <div id="currentUserDisplay" style="font-size: 14px; color: #334155;"></div>
+        <a href="exam.html" class="btn-link" target="_blank">Mở Trang Làm Bài &rarr;</a>
+      </div>
     </header>
 
-    <!-- Section 1: Cấu hình kết nối -->
-    
-      <h2>1. Cấu Hình Kết Nối (GitHub & Gemini AI)</h2>
+    <!-- Section 1: Cấu hình kết nối (Chỉ dành cho Admin tổng) -->
+    <section class="card" id="sectionConfig">
+      <h2><b>Cấu Hình Kết Nối</b></h2>
       <form id="configForm" class="form-grid">
         <div class="form-group">
           <label for="ghOwner">GitHub Owner (Tài khoản):</label>
@@ -63,47 +67,46 @@
       </form>
     </section>
 
-    <!-- Section 2: Danh sách Giảng viên -->
-    <section class="card">
-      <div class="card" id="sectionLecturers" style="margin-top: 24px;">
-        <h2>2. Quản Lý Danh Sách Giảng Viên</h2>
-        
-        <form id="addLecturerForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Tài khoản (Username):</label>
-            <input type="text" id="gvUsername" placeholder="ví dụ: gv_nguyenvana" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Mật khẩu:</label>
-            <input type="password" id="gvPassword" placeholder="Nhập mật khẩu" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-          </div>
-          <div>
-            <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Họ và tên Giảng viên:</label>
-            <input type="text" id="gvFullName" placeholder="ví dụ: Nguyễn Văn A" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-          </div>
-          <div style="display:flex; align-items:flex-end;">
-            <button type="submit" class="btn btn-primary" style="width:100%; height:38px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">➕ Thêm Giảng Viên</button>
-          </div>
-        </form>
+    <!-- Section 2: Danh sách Giảng viên (Chỉ dành cho Admin tổng) -->
+    <section class="card" id="sectionLecturers">
+      <h2><b>Quản Lý Danh Sách Giảng Viên</b>b></h2>
       
-        <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-          <thead>
-            <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
-              <th style="padding: 10px;">Tài khoản</th>
-              <th style="padding: 10px;">Họ & Tên</th>
-              <th style="padding: 10px;">Vai trò</th>
-              <th style="padding: 10px;">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody id="lecturerTableBody">
-            <tr><td colspan="4" class="empty-msg" style="padding: 15px; text-align: center; color: #64748b;">⏳ Đang tải danh sách tài khoản...</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <form id="addLecturerForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div>
+          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Tài khoản (Username):</label>
+          <input type="text" id="gvUsername" placeholder="ví dụ: gv_nguyenvana" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+        </div>
+        <div>
+          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Mật khẩu:</label>
+          <input type="password" id="gvPassword" placeholder="Nhập mật khẩu" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+        </div>
+        <div>
+          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Họ và tên Giảng viên:</label>
+          <input type="text" id="gvFullName" placeholder="ví dụ: Nguyễn Văn A" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button type="submit" class="btn btn-primary" style="width:100%; height:38px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">➕ Thêm Giảng Viên</button>
+        </div>
+      </form>
 
-    <!-- Section 3: Trích xuất bằng AI -->
+      <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+        <thead>
+          <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
+            <th style="padding: 10px;">Tài khoản</th>
+            <th style="padding: 10px;">Họ & Tên</th>
+            <th style="padding: 10px;">Vai trò</th>
+            <th style="padding: 10px;">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="lecturerTableBody">
+          <tr><td colspan="4" class="empty-msg" style="padding: 15px; text-align: center; color: #64748b;">⏳ Đang tải danh sách tài khoản...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 3: Trích xuất bằng AI (Cả Admin và Giảng viên) -->
     <section class="card">
-      <h2>3. Trích Xuất & Thêm Đề Thi Mới Vào Thư Viện</h2>
+      <h2><b>Thêm Đề Thi Mới Vào Thư Viện</b>b></h2>
       <form id="extractForm" class="form-grid">
         <div class="form-group">
           <label for="examTitle">Tên Bộ Đề Thi (*):</label>
@@ -138,16 +141,16 @@
       </form>
     </section>
 
-    <!-- Section 4: Thư viện đề thi -->
-    
+    <!-- Section 4: Thư viện đề thi (Phân quyền dữ liệu theo User) -->
+    <section class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="border: none; margin: 0; padding: 0;">4. Thư Viện Đề Thi Trực Tuyến (GitHub /exams)</h2>
+        <h2 style="border: none; margin: 0; padding: 0;"><b>Thư Viện Đề Thi Trực Tuyến</b>b></h2>
         <button id="btnRefresh" class="btn btn-secondary">Làm Mới Danh Sách</button>
       </div>
       <table class="data-table">
         <thead>
           <tr>
-            <th>Tên File / Đề Thi</th>
+            <th>Tên Đề Thi</th>
             <th>Kích Thước</th>
             <th>Trạng Thái</th>
             <th>Hành Động (Action)</th>
