@@ -242,3 +242,21 @@ function escapeHTML(str) {
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
 }
+
+const payload = {
+  examId: examData.examId,            // VD: "dcsth_1"
+  examTitle: examData.title,          // VD: "Đề Kiểm Tra Sinh Học G"
+  studentId: "SV123456",
+  fullName: "Nguyễn Văn A",
+  email: "CNTT-K45",                  // Email hoặc Lớp
+  answeredCount: 38,                  // Số câu sinh viên chọn đáp án
+  totalQuestions: 40,                 // Tổng số câu của đề
+  score: 9.5,                         // Điểm số hệ 10
+  violations: 1,                      // Số lần chuyển tab/vi phạm
+  status: "Tự nộp"                    // "Tự nộp", "Cưỡng chế nộp", hoặc "Nộp do hết thời gian"
+};
+
+fetch(webhookUrl, {
+  method: 'POST',
+  body: JSON.stringify(payload)
+});
