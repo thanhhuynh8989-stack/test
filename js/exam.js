@@ -25,9 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   cleanExamId = rawExamId.replace(/\.json$/i, '');
 
   try {
-    const res = await fetch(`exams/${cleanExamId}.json`);
-    if (!res.ok) throw new Error(`Không tìm thấy file đề thi "exams/${cleanExamId}.json" trên hệ thống.`);
-    const rawData = await res.json();
+    // 🚀 Tải đề thi với cơ chế chống Cache & Tự động thử lại 3 lần nếu GitHub chưa đồng bộ kịp
+    const rawData = await fetchExamDataWithRetry(cleanExamId, 3);
     
     // 💥 Xử lý tráo câu hỏi và tráo phương án ngay khi tải đề thi
     examData = prepareExamForStudent(rawData);
@@ -82,6 +81,54 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
+
+/**
+ * 🔄 Hàm tải đề thi thông minh:
+ * - Chống cache bằng timestamp (_t)
+ * - Tải trực tiếp từ Raw GitHub / Thư mục cục bộ
+ * - Tự động thử lại nhiều lần nếu GitHub đang xử lý đồng bộ file mới
+ */
+async function fetchExamDataWithRetry(cleanId, maxRetries = 3) {
+  let config = {};
+  try {
+    config = typeof getConfig === 'function' ? getConfig() : {};
+  } catch (e) {
+    config = {};
+  }
+
+  const owner = config.ghOwner;
+  const repo = config.ghRepo;
+  const branch = config.ghBranch || 'main';
+
+  // Danh sách các đường dẫn ưu tiên tải
+  const urlsToTry = [];
+  if (owner && repo) {
+    urlsToTry.push(`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/exams/${cleanId}.json`);
+  }
+  urlsToTry.push(`exams/${cleanId}.json`);
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (const baseUrl of urlsToTry) {
+      try {
+        const cacheBustingUrl = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+        const res = await fetch(cacheBustingUrl, { cache: 'no-store' });
+
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (err) {
+        console.warn(`[Lần ${attempt}/${maxRetries}] Chưa tải được từ ${baseUrl}`);
+      }
+    }
+
+    // Nêu chưa phải lần thử cuối, tạm dừng 2 giây chờ hệ thống đồng bộ
+    if (attempt < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+
+  throw new Error(`Không thể tìm thấy hoặc tải dữ liệu đề thi "${cleanId}.json". Hệ thống đang đồng bộ, vui lòng tải lại trang sau vài giây!`);
+}
 
 // 💥 Thuật toán Fisher-Yates Shuffle dùng để tráo ngẫu nhiên
 function shuffleArray(array) {
@@ -232,7 +279,7 @@ async function finishExam() {
   let correctCount = 0;
   let answeredCount = 0;
   const totalQuestions = examData.questions.length;
-  const studentAnswers = []; // Mảng chứa 50+ câu trả lời chi tiết của thí sinh
+  const studentAnswers = []; // Mảng chứa các câu trả lời chi tiết của thí sinh
 
   examData.questions.forEach((q, index) => {
     const selected = document.querySelector(`input[name="q_${index}"]:checked`);
@@ -271,7 +318,9 @@ async function finishExam() {
   });
 
   const score = ((correctCount / totalQuestions) * 10).toFixed(2);
-  const config = getConfig();
+  let config = {};
+  try { config = getConfig(); } catch(e) {}
+  
   const targetWebhook = examData.webhookUrl || config.webhookUrl;
 
   const maxViolations = examData?.maxViolations || 3;
