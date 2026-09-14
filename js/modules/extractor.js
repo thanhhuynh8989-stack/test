@@ -4,26 +4,14 @@ let currentExamData = []; // Lưu trữ danh sách câu hỏi hiện tại
 
 export function initExtractorModule() {
   const btnProcess = document.getElementById('btnProcessWord');
-  const fileInput = document.getElementById('wordFileInput');
   const btnAddQuestion = document.getElementById('btnAddQuestion');
   const btnAiSuggest = document.getElementById('btnAiSuggest');
   const btnSaveExam = document.getElementById('btnSaveExam');
 
-  if (btnProcess) {
-    btnProcess.addEventListener('click', handleWordUpload);
-  }
-
-  if (btnAddQuestion) {
-    btnAddQuestion.addEventListener('click', addNewQuestion);
-  }
-
-  if (btnAiSuggest) {
-    btnAiSuggest.addEventListener('click', handleAiSuggestAnswers);
-  }
-
-  if (btnSaveExam) {
-    btnSaveExam.addEventListener('click', saveExamToFile);
-  }
+  if (btnProcess) btnProcess.addEventListener('click', handleWordUpload);
+  if (btnAddQuestion) btnAddQuestion.addEventListener('click', addNewQuestion);
+  if (btnAiSuggest) btnAiSuggest.addEventListener('click', handleAiSuggestAnswers);
+  if (btnSaveExam) btnSaveExam.addEventListener('click', saveExamToSystem);
 }
 
 // 1. Đọc và bóc tách file Word (Docx)
@@ -34,17 +22,20 @@ async function handleWordUpload() {
     return;
   }
 
+  if (typeof mammoth === 'undefined') {
+    alert('❌ Khuyết thư viện Mammoth.js! Vui lòng chèn script MammothJS vào file HTML.');
+    return;
+  }
+
   const file = fileInput.files[0];
   const reader = new FileReader();
 
   reader.onload = async function (e) {
     const arrayBuffer = e.target.result;
     try {
-      // Dùng MammothJS để chuyển Docx sang HTML
       const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
       const htmlText = result.value;
 
-      // Parse HTML ra danh sách câu hỏi
       currentExamData = parseQuestionsFromHtml(htmlText);
 
       if (currentExamData.length === 0) {
@@ -52,7 +43,6 @@ async function handleWordUpload() {
         return;
       }
 
-      // Hiển thị ra giao diện Preview
       renderPreviewUI();
 
     } catch (err) {
@@ -93,7 +83,6 @@ function parseQuestionsFromHtml(html) {
           isCorrect: false
         });
       } else if (currentQ.options.length === 0) {
-        // Nối dòng nếu câu hỏi dài nhiều dòng
         currentQ.question += '\n' + text;
       }
     }
@@ -101,7 +90,6 @@ function parseQuestionsFromHtml(html) {
 
   if (currentQ) questions.push(currentQ);
 
-  // Mặc định tạo đủ 4 phương án nếu thiếu
   questions.forEach(q => {
     while (q.options.length < 4) {
       q.options.push({
@@ -129,13 +117,12 @@ function renderPreviewUI() {
     card.className = 'question-card';
     card.style.cssText = 'border:1px solid #e5e7eb; border-radius:8px; padding:15px; margin-bottom:15px; background:#fff; position:relative;';
 
-    // Header câu hỏi + Nút xóa
     let html = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <b style="color:#1e40af;">Câu ${index + 1}:</b>
         <button onclick="window.deleteQuestion(${index})" style="background:#ef4444; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">🗑️ Xóa câu này</button>
       </div>
-      <textarea onchange="window.updateQuestionText(${index}, this.value)" style="width:100%; min-height:60px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; margin-bottom:10px;">${q.question}</textarea>
+      <textarea onchange="window.updateQuestionText(${index}, this.value)" style="width:100%; min-height:60px; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; margin-bottom:10px;">${escapeHTML(q.question)}</textarea>
       
       <div style="margin-bottom:10px;">
         <label style="font-size:13px; color:#475569; cursor:pointer;">
@@ -147,7 +134,6 @@ function renderPreviewUI() {
       <div class="options-group">
     `;
 
-    // 4 Phương án A, B, C, D
     const labels = ['A', 'B', 'C', 'D'];
     q.options.forEach((opt, optIndex) => {
       const label = labels[optIndex] || `P.An ${optIndex + 1}`;
@@ -155,7 +141,7 @@ function renderPreviewUI() {
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
           <input type="radio" name="correct_${q.id}" ${opt.isCorrect ? 'checked' : ''} onchange="window.setCorrectOption(${index}, ${optIndex})" style="width:18px; height:18px; cursor:pointer;" title="Tích chọn làm đáp án đúng">
           <span style="font-weight:bold; width:20px;">${label}.</span>
-          <input type="text" value="${opt.text.replace(/"/g, '&quot;')}" onchange="window.updateOptionText(${index}, ${optIndex}, this.value)" style="flex:1; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:14px;">
+          <input type="text" value="${escapeHTML(opt.text)}" onchange="window.updateOptionText(${index}, ${optIndex}, this.value)" style="flex:1; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:14px;">
         </div>
       `;
     });
@@ -197,17 +183,16 @@ function addNewQuestion() {
   renderPreviewUI();
 }
 
-// 4. Tích hợp AI (Gemini API) giải các câu CHƯA CÓ đáp án
+// 4. AI gợi ý đáp án
 async function handleAiSuggestAnswers() {
   const config = getConfig();
   const apiKey = config.geminiApiKey;
 
   if (!apiKey) {
-    alert('Vui lòng nhập Gemini API Key trong "Mục 1: Cấu hình hệ thống" trước khi dùng tính năng này!');
+    alert('Vui lòng nhập Gemini API Key trong Mục Cấu hình hệ thống!');
     return;
   }
 
-  // Tìm các câu chưa được chọn đáp án đúng
   const unselectedQuestions = [];
   currentExamData.forEach((q, index) => {
     const hasCorrect = q.options.some(opt => opt.isCorrect);
@@ -224,23 +209,20 @@ async function handleAiSuggestAnswers() {
   const btnAi = document.getElementById('btnAiSuggest');
   const originalText = btnAi.textContent;
   btnAi.disabled = true;
-  btnAi.textContent = `🤖 AI đang giải ${unselectedQuestions.length} câu chưa có đáp án...`;
+  btnAi.textContent = `🤖 AI đang giải ${unselectedQuestions.length} câu...`;
 
   try {
-    const prompt = `Bạn là một chuyên gia giáo dục. Hãy đọc danh sách câu hỏi trắc nghiệm dưới đây và trả về kết quả dưới dạng JSON duy nhất là mảng các object. Mỗi object gồm { "index": số_thứ_tự_câu, "correctIndex": chỉ_số_đáp_án_đúng_từ_0_đến_3 }.\n\nDanh sách câu hỏi:\n${JSON.stringify(unselectedQuestions, null, 2)}`;
+    const prompt = `Bạn là một chuyên gia giáo dục. Trả về kết quả dưới dạng mảng JSON duy nhất: [{ "index": số_thứ_tự_câu, "correctIndex": chỉ_số_đáp_án_đúng_từ_0_đến_3 }].\n\nDanh sách câu hỏi:\n${JSON.stringify(unselectedQuestions, null, 2)}`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
 
     const data = await response.json();
     const replyText = data.candidates[0].content.parts[0].text;
     
-    // Parse JSON từ phản hồi của Gemini
     const jsonMatch = replyText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const results = JSON.parse(jsonMatch[0]);
@@ -252,7 +234,7 @@ async function handleAiSuggestAnswers() {
         }
       });
       renderPreviewUI();
-      alert(`✨ AI đã gợi ý xong đáp án cho ${results.length} câu! Hãy kiểm tra lại trước khi lưu.`);
+      alert(`✨ AI đã gợi ý xong đáp án cho ${results.length} câu!`);
     } else {
       throw new Error('AI không trả về đúng định dạng JSON.');
     }
@@ -265,39 +247,93 @@ async function handleAiSuggestAnswers() {
   }
 }
 
-// 5. Lưu đề thi thành file JSON
-function saveExamToFile() {
+// 5. Lưu đề thi (Vừa lưu lên GitHub vừa tải về máy)
+async function saveExamToSystem() {
   if (currentExamData.length === 0) {
     alert('Chưa có dữ liệu câu hỏi để lưu!');
     return;
   }
 
-  // Kiểm tra xem còn câu nào chưa chọn đáp án không
   const missingIndex = currentExamData.findIndex(q => !q.options.some(o => o.isCorrect));
   if (missingIndex !== -1) {
-    alert(`⚠️ Câu ${missingIndex + 1} chưa được chọn đáp án đúng! Vui lòng chọn đáp án hoặc dùng AI gợi ý.`);
+    alert(`⚠️ Câu ${missingIndex + 1} chưa được chọn đáp án đúng! Vui lòng chọn đáp án.`);
     return;
   }
 
   const examTitleInput = document.getElementById('examTitleInput');
+  const examDurationInput = document.getElementById('examDurationInput');
   const examTitle = (examTitleInput && examTitleInput.value.trim()) || 'De_Thi_Trac_Nghiem';
-  const examId = 'EXAM_' + Date.now();
+  const duration = (examDurationInput && parseInt(examDurationInput.value)) || 15;
+
+  const cleanId = examTitle.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
 
   const payload = {
-    examId: examId,
-    examTitle: examTitle,
+    examId: cleanId,
+    title: examTitle,
+    duration: duration,
     createdAt: new Date().toISOString(),
     totalQuestions: currentExamData.length,
     questions: currentExamData
   };
 
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+  const jsonString = JSON.stringify(payload, null, 2);
+  const config = getConfig();
+
+  const btnSaveExam = document.getElementById('btnSaveExam');
+  if (btnSaveExam) btnSaveExam.disabled = true;
+
+  // 🚀 Đẩy trực tiếp lên GitHub nếu đã cấu hình
+  if (config.ghOwner && config.ghRepo && config.ghToken && config.ghToken !== '••••••••••••••••') {
+    try {
+      const fileName = `${cleanId}.json`;
+      const url = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/exams/${fileName}`;
+      
+      // Mã hóa UTF-8 sang Base64 cho GitHub API
+      const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${config.ghToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `Tạo đề thi mới: ${examTitle}`,
+          content: base64Content,
+          branch: config.ghBranch || 'main'
+        })
+      });
+
+      if (!res.ok) {
+        const errErr = await res.json();
+        throw new Error(errErr.message || res.statusText);
+      }
+
+      alert(`🎉 Đã tạo và xuất bản đề thi thành công lên GitHub!\nTên file: exams/${fileName}`);
+    } catch (err) {
+      alert(`⚠️ Không thể tự đẩy file lên GitHub (${err.message}). Hệ thống sẽ tự động tải file JSON xuống máy.`);
+      downloadLocalJson(jsonString, examTitle);
+    }
+  } else {
+    alert('⚠️ Chưa cấu hình GitHub PAT. Hệ thống tiến hành tải file JSON xuống máy cá nhân.');
+    downloadLocalJson(jsonString, examTitle);
+  }
+
+  if (btnSaveExam) btnSaveExam.disabled = false;
+}
+
+function downloadLocalJson(content, title) {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(content);
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `${examTitle}.json`);
+  downloadAnchor.setAttribute("download", `${title}.json`);
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
+}
 
-  alert('🎉 Lưu đề thi thành công! Đã tải file JSON về máy.');
+function escapeHTML(str) {
+  return String(str || '').replace(/[&<>'"]/g, 
+    tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+  );
 }
