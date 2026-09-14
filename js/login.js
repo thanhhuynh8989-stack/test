@@ -13,32 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = document.getElementById('password').value.trim();
 
     btnLogin.disabled = true;
-    btnLogin.textContent = '⏳ Đang xác thực...';
+    btnLogin.textContent = '⏳ Đang kiểm tra đăng nhập...';
 
     try {
-      // 1. Kiểm tra nếu là Admin tổng (Tài khoản: admin / Mật khẩu: admin123)
-      if (username === 'admin' && password === 'admin123') {
-        sessionStorage.setItem('userSession', JSON.stringify({
-          username: 'admin',
-          fullName: 'Quản Trị Viên Tổng',
-          role: 'admin'
-        }));
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // 2. Nếu không phải Admin -> Gọi Google Apps Script đối soát Giảng viên
+      // Đọc toàn bộ tài khoản từ Google Sheet (DS_GV)
       const res = await fetch(`${SCRIPT_URL}?_t=${Date.now()}`);
       const result = await res.json();
 
       if (result.status === 'success' && Array.isArray(result.data)) {
-        const foundUser = result.data.find(u => u.username === username && u.password === password);
+        // Tìm tài khoản khớp cả username và password
+        const foundUser = result.data.find(
+          u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+        );
         
         if (foundUser) {
           sessionStorage.setItem('userSession', JSON.stringify({
             username: foundUser.username,
-            fullName: foundUser.fullName || foundUser.username,
-            role: 'lecturer'
+            fullName: foundUser.fullName,
+            role: foundUser.role // 'admin' hoặc 'lecturer' đọc từ Sheet
           }));
           window.location.href = 'index.html';
           return;
