@@ -106,28 +106,49 @@
     </section>
 
     <!-- Section 3: Trích xuất bằng AI (Cả Admin và Giảng viên) -->
-    <section class="card">
-      <h2>Thêm Đề Thi Mới Vào Thư Viện</h2>
-      <form id="extractForm" class="form-grid">
-        <div class="form-group">
-          <label for="examTitle">Tên Bộ Đề Thi (*):</label>
-          <input type="text" id="examTitle" placeholder="VD: Đề Kiểm Tra Sinh Học G">
+    <!-- KHU VỰC 1: TẢI FILE WORD -->
+    <div class="form-group">
+      <label for="wordFileInput">Chọn File Đề Thi Word (.docx):</label>
+      <input type="file" id="wordFileInput" accept=".docx" class="form-control">
+    </div>
+    <div class="form-actions" style="margin-top: 10px;">
+      <button type="button" id="btnProcessWord" class="btn btn-success">
+        📄 Trích Xuất & Xem Trước Đề Thi
+      </button>
+    </div>
+    
+    <!-- KHU VỰC 2: KHUNG XEM TRƯỚC VÀ CHỈNH SỬA ĐỀ THI (PREVIEW AREA) -->
+    <div id="sectionPreview" style="display: none; margin-top: 25px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+      <h3 style="margin-top:0; color:#1e293b;">📋 Xem Trước & Chỉnh Sửa Đề Thi</h3>
+      
+      <!-- Cấu hình tên & thời gian đề thi -->
+      <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="flex: 2; min-width: 250px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 5px;">Tên bài thi / Đề thi:</label>
+          <input type="text" id="examTitleInput" placeholder="Ví dụ: Đề thi Giữa kỳ Triết học" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
         </div>
-        <div class="form-group">
-          <label for="examDuration">Thời Gian Làm Bài (Phút):</label>
-          <input type="number" id="examDuration" value="45">
+        <div style="flex: 1; min-width: 120px;">
+          <label style="font-weight: 600; display: block; margin-bottom: 5px;">Thời gian (phút):</label>
+          <input type="number" id="examDurationInput" value="15" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
         </div>
-        <div class="form-group">
-          <label for="maxViolations">Số Lần Vi Phạm Tối Đa (Chuyển tab):</label>
-          <input type="number" id="maxViolations" value="3">
-        </div>
-        <div class="form-group">
-          <label for="docxFile">Chọn File Đề Thi Word (.docx):</label>
-          <input type="file" id="docxFile" accept=".docx">
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-success">Trích Xuất Bằng AI & Lưu Lên Thư Viện</button>
-        </div>
+      </div>
+    
+      <!-- Thanh công cụ điều khiển Preview -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <button type="button" id="btnAddQuestion" class="btn" style="background: #0284c7; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
+          ➕ Thêm câu hỏi
+        </button>
+        <button type="button" id="btnAiSuggest" class="btn" style="background: #7c3aed; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
+          🤖 AI Gợi Ý Đáp Án
+        </button>
+        <button type="button" id="btnSaveExam" class="btn" style="background: #16a34a; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+          💾 Lưu & Xuất Bản Lên Thư Viện (GitHub)
+        </button>
+      </div>
+    
+      <!-- Nơi hiển thị danh sách câu hỏi -->
+      <div id="previewContainer"></div>
+    </div>
 
         <!-- Thanh tiến trình xử lý -->
         <div id="progressContainer" style="display: none; margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
