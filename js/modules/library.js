@@ -1,4 +1,4 @@
-import { getConfig, getCurrentUser } from './config.js';
+import { getConfig, getCurrentUser, SCRIPT_URL } from './config.js';
 
 export async function loadExamLibrary() {
   const tbody = document.getElementById('libraryTableBody');
@@ -12,11 +12,10 @@ export async function loadExamLibrary() {
     return;
   }
 
-  tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">⏳ Đang kết nối GitHub API và đọc dữ liệu đề thi...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">⏳ Đang kết nối và đọc dữ liệu đề thi...</td></tr>`;
 
   try {
     const branch = config.ghBranch || 'main';
-    // 🔥 Thêm &_t=${Date.now()} để xóa cache của GitHub API và Trình duyệt
     const url = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/exams?ref=${branch}&_t=${Date.now()}`;
     
     const headers = {};
@@ -41,7 +40,6 @@ export async function loadExamLibrary() {
       return;
     }
 
-    // Đọc song song nội dung của từng file JSON (có chống cache)
     const examPromises = jsonFiles.map(async (file) => {
       try {
         const rawRes = await fetch(`${file.download_url}?_t=${Date.now()}`, { cache: 'no-store' });
@@ -50,7 +48,7 @@ export async function loadExamLibrary() {
           fileName: file.name,
           sha: file.sha,
           title: examData.title || file.name,
-          createdBy: examData.createdBy || 'Unknown', // 🔥 Đọc tài khoản người tạo đề
+          createdBy: examData.createdBy || 'Unknown',
           questionCount: examData.questions ? examData.questions.length : 0,
           duration: examData.duration || 15,
           size: (file.size / 1024).toFixed(1) + ' KB',
@@ -74,13 +72,12 @@ export async function loadExamLibrary() {
 
     let examList = await Promise.all(examPromises);
 
-    // 🔥 PHÂN QUYỀN HIỂN THỊ: Nếu người dùng là Giảng viên -> Chỉ lọc hiển thị các đề do Giảng viên đó tạo
     if (currentUser && currentUser.role === 'lecturer') {
       examList = examList.filter(exam => exam.createdBy === currentUser.username);
     }
 
     if (examList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">Không có đề thi nào trong danh sách của bạn.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-msg">Không có đề thi nào trong Kho của bạn.</td></tr>`;
       return;
     }
 
@@ -105,8 +102,9 @@ export async function loadExamLibrary() {
           <td><span class="status-badge" style="background:#dcfce7;color:#166534">Sẵn sàng</span></td>
           <td>
             <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-              <a href="${examUrl}" target="_blank" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; text-decoration: none;">🚀 Mở Làm Bài</a>
-              <button data-url="${examUrl}" class="btn btn-secondary btn-copy-link" style="padding: 5px 10px; font-size: 12px; cursor: pointer;">📋 Copy Link</button>
+              <a href="${examUrl}" target="_blank" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; text-decoration: none;">🚀 Mở Đề</a>
+              <button data-url="${examUrl}" class="btn btn-secondary btn-copy-link" style="padding: 5px 10px; font-size: 12px; cursor: pointer;">📋 Lấy Link</button>
+              <button data-examid="${exam.examId}" data-title="${safeTitle}" class="btn btn-export-excel" style="padding: 5px 10px; font-size: 12px; background-color: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer;">📊 Kết Quả</button>
               <a href="${exam.htmlUrl}" target="_blank" class="btn-link" style="color: #64748b; font-size: 12px;">JSON</a>
               <button data-filename="${exam.fileName}" data-sha="${exam.sha}" data-title="${safeTitle}" class="btn btn-delete-exam" style="padding: 5px 10px; font-size: 12px; background-color: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer;">🗑️ Xóa</button>
             </div>
@@ -124,6 +122,15 @@ export async function loadExamLibrary() {
       });
     });
 
+    // Sự kiện Tải Kết Quả Excel
+    tbody.querySelectorAll('.btn-export-excel').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const examId = e.currentTarget.getAttribute('data-examid');
+        const title = e.currentTarget.getAttribute('data-title');
+        await exportResultsToExcel(examId, title, e.currentTarget);
+      });
+    });
+
     // Sự kiện Xóa bài thi
     tbody.querySelectorAll('.btn-delete-exam').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -131,7 +138,7 @@ export async function loadExamLibrary() {
         const sha = e.currentTarget.getAttribute('data-sha');
         const title = e.currentTarget.getAttribute('data-title');
 
-        if (confirm(`Bạn có chắc chắn muốn xóa đề thi "${title}" khỏi GitHub?`)) {
+        if (confirm(`Bạn có chắc chắn muốn xóa đề thi "${title}" khỏi Kho?`)) {
           await deleteExamFile(fileName, sha, title);
         }
       });
@@ -143,8 +150,71 @@ export async function loadExamLibrary() {
 }
 
 /**
- * Xóa file JSON và tự động reload danh sách ngay lập tức
+ * Xuất dữ liệu làm bài ra file Excel (.xlsx)
  */
+async function exportResultsToExcel(examId, examTitle, buttonElem) {
+  const originalText = buttonElem.textContent;
+  buttonElem.disabled = true;
+  buttonElem.textContent = '⏳ Đang tải...';
+
+  try {
+    const config = getConfig();
+    const webhookUrl = config.webhookUrl || SCRIPT_URL;
+    const res = await fetch(`${webhookUrl}?action=getResults&examId=${encodeURIComponent(examId)}&_t=${Date.now()}`);
+    const result = await res.json();
+
+    if (result.status !== 'success' || !Array.isArray(result.data) || result.data.length === 0) {
+      alert(`Chưa có sinh viên nào nộp bài cho đề thi "${examTitle}".`);
+      return;
+    }
+
+    // Định dạng dữ liệu các cột cho bảng Excel
+    const excelRows = result.data.map((row, index) => ({
+      "STT": index + 1,
+      "Thời gian nộp": row.timestamp ? new Date(row.timestamp).toLocaleString('vi-VN') : '',
+      "Mã sinh viên": row.studentId,
+      "Họ và tên": row.fullName,
+      "Email/Lớp": row.email,
+      "Tên bài thi": row.examTitle || examTitle,
+      "Số câu đã làm": row.answeredCount,
+      "Tổng số câu": row.totalQuestions,
+      "Điểm số": row.score,
+      "Số lần vi phạm": row.violations,
+      "Trạng thái nộp": row.status
+    }));
+
+    // Tạo file Excel với SheetJS
+    const worksheet = XLSX.utils.json_to_sheet(excelRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Kết quả bài thi");
+
+    // Điều chỉnh độ rộng cột tự động
+    const max_width = excelRows.reduce((w, r) => Math.max(w, r["Họ và tên"].length), 10);
+    worksheet["!cols"] = [
+      { wch: 5 },  // STT
+      { wch: 20 }, // Thời gian nộp
+      { wch: 15 }, // Mã SV
+      { wch: Math.max(max_width, 22) }, // Họ và tên
+      { wch: 25 }, // Email/Lớp
+      { wch: 30 }, // Tên bài thi
+      { wch: 15 }, // Số câu đã làm
+      { wch: 15 }, // Tổng số câu
+      { wch: 10 }, // Điểm
+      { wch: 15 }, // Vi phạm
+      { wch: 20 }  // Trạng thái
+    ];
+
+    const fileName = `KetQua_${examId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+  } catch (err) {
+    alert(`❌ Lỗi khi lấy kết quả: ${err.message}`);
+  } finally {
+    buttonElem.disabled = false;
+    buttonElem.textContent = originalText;
+  }
+}
+
 async function deleteExamFile(fileName, sha, title) {
   const config = getConfig();
 
@@ -175,10 +245,7 @@ async function deleteExamFile(fileName, sha, title) {
       throw new Error(errData.message || res.statusText);
     }
 
-    // 🔥 1. Reload danh sách ngay lập tức
     await loadExamLibrary();
-
-    // 🔥 2. Thông báo cho người dùng sau khi bảng đã cập nhật xong
     alert(`✅ Đã xóa thành công đề thi: ${title}`);
 
   } catch (err) {
