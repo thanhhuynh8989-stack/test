@@ -1,5 +1,8 @@
 import { getConfig } from './modules/config.js';
 
+// 💥 URL Webhook dự phòng khi thí sinh mở bài thi từ link công khai (không có trong localStorage)
+const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/1462i25kXaQVYYWcxOqiqAXPn3LJDGnHYPfpukY5whJY/exec";
+
 let examData = null;
 let timerInterval = null;
 let timeLeft = 0;
@@ -22,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Loại bỏ đuôi .json nếu URL truyền dư
-  cleanExamId = rawExamId.replace(/\.json$/i, '');
+  cleanExamId = rawExamId.replace(/\.json$/i, '').trim();
 
   try {
     // 🚀 Tải đề thi với cơ chế chống Cache & Tự động thử lại 3 lần nếu GitHub chưa đồng bộ kịp
@@ -321,7 +324,8 @@ async function finishExam() {
   let config = {};
   try { config = getConfig(); } catch(e) {}
   
-  const targetWebhook = examData.webhookUrl || config.webhookUrl;
+  // 💥 Lấy Webhook theo thứ tự ưu tiên: Đề thi -> LocalStorage -> Mặc định dự phòng
+  const targetWebhook = examData.webhookUrl || config.webhookUrl || DEFAULT_WEBHOOK_URL;
 
   const maxViolations = examData?.maxViolations || 3;
   let submitStatus = "Tự nộp";
@@ -372,10 +376,25 @@ async function finishExam() {
         </div>
         <p style="font-size: 15px; color: #475569; margin-bottom: 8px;">Số câu trả lời đúng: <strong>${correctCount} / ${totalQuestions}</strong> câu</p>
         <p style="font-size: 14px; color: #64748b; margin-bottom: 24px;">Số lần vi phạm: <strong>${violations}</strong> | Trạng thái: <strong>${submitStatus}</strong></p>
-        <button onclick="window.close()" class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Đóng Màn Hình</button>
+        <button id="btnCloseExam" class="btn btn-primary" style="padding: 10px 20px; font-size: 14px; background: #2563eb; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Đóng Màn Hình</button>
       </div>
     `;
+
+    // 💥 Gán sự kiện đóng màn hình an toàn
+    const btnClose = document.getElementById('btnCloseExam');
+    if (btnClose) {
+      btnClose.addEventListener('click', handleCloseWindow);
+    }
   }
+}
+
+// 💥 Hàm xử lý đóng cửa sổ/tab an toàn
+function handleCloseWindow() {
+  window.close();
+  // Nếu trình duyệt chặn window.close() (do mở trực tiếp qua liên kết), hiển thị thông báo thay thế
+  setTimeout(() => {
+    alert("✅ Kết quả bài thi của bạn đã được ghi nhận thành công!\n\nBạn có thể tự đóng tab trình duyệt này.");
+  }, 300);
 }
 
 // Mã hóa ký tự đặc biệt phòng chống XSS
