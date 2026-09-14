@@ -134,3 +134,92 @@
   color: #94a3b8;
   padding: 20px !important;
 }
+
+/* ==========================================
+   RESPONSIVE COMPONENTS (Màn hình điện thoại ≤ 768px)
+   ========================================== */
+@media (max-width: 768px) {
+  .card {
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+
+  .input-inline {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+
+  /* Chuyển Bảng thành dạng Thẻ (Card View) */
+  .data-table, 
+  .data-table thead, 
+  .data-table tbody, 
+  .data-table th, 
+  .data-table td, 
+  .data-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody tr {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  .data-table td {
+    border: none;
+    border-bottom: 1px dashed #f1f5f9;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .data-table td:first-child {
+    display: block;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+  }
+
+  .data-table td:last-child {
+    border-bottom: none;
+    padding-top: 10px;
+    display: block;
+  }
+
+  /* Chia khung nút thao tác thành 2 cột x 2 hàng */
+  .data-table td:last-child > div {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .data-table td:last-child .btn,
+  .data-table td:last-child a,
+  .data-table td:last-child button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+  }
+}
