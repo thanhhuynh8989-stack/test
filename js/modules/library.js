@@ -150,16 +150,23 @@ export async function loadExamLibrary() {
 }
 
 /**
- * Xuất dữ liệu làm bài ra file Excel (.xlsx)
+ * Xuất dữ liệu làm bài ra file Excel (.xlsx) kèm chi tiết đáp án từng câu
  */
 async function exportResultsToExcel(examId, examTitle, buttonElem) {
-  const originalText = buttonElem.textContent;
-  buttonElem.disabled = true;
-  buttonElem.textContent = '⏳ Đang tải...';
+  const originalText = buttonElem ? buttonElem.textContent : '';
+  if (buttonElem) {
+    buttonElem.disabled = true;
+    buttonElem.textContent = '⏳ Đang tải...';
+  }
 
   try {
-    const config = getConfig();
-    const webhookUrl = config.webhookUrl || SCRIPT_URL;
+    const config = typeof getConfig === 'function' ? getConfig() : {};
+    const webhookUrl = config.webhookUrl || (typeof SCRIPT_URL !== 'undefined' ? SCRIPT_URL : '');
+    
+    if (!webhookUrl) {
+      throw new Error('Chưa cấu hình URL Google Apps Script!');
+    }
+
     const res = await fetch(`${webhookUrl}?action=getResults&examId=${encodeURIComponent(examId)}&_t=${Date.now()}`);
     const result = await res.json();
 
@@ -168,20 +175,36 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       return;
     }
 
+    let maxAnswersCount = 0;
+
     // Định dạng dữ liệu các cột cho bảng Excel
-    const excelRows = result.data.map((row, index) => ({
-      "STT": index + 1,
-      "Thời gian nộp": row.timestamp || '',
-      "Mã sinh viên": row.studentId,
-      "Họ và tên": row.fullName,
-      "Email/Lớp": row.email,
-      "Tên bài thi": row.examTitle || examTitle,
-      "Số câu đã làm": row.answeredCount,
-      "Tổng số câu": row.totalQuestions,
-      "Điểm số": row.score,
-      "Số lần vi phạm": row.violations,
-      "Trạng thái nộp": row.status
-    }));
+    const excelRows = result.data.map((row, index) => {
+      const baseRow = {
+        "STT": index + 1,
+        "Thời gian nộp": row.timestamp || '',
+        "Mã sinh viên": row.studentId || '',
+        "Họ và tên": row.fullName || '',
+        "Email/Lớp": row.email || '',
+        "Tên bài thi": row.examTitle || examTitle,
+        "Số câu đã làm": row.answeredCount || 0,
+        "Tổng số câu": row.totalQuestions || 0,
+        "Điểm số": row.score || 0,
+        "Số lần vi phạm": row.violations || 0,
+        "Trạng thái nộp": row.status || ''
+      };
+
+      // 💥 Tự động thêm các cột chi tiết từng câu: Câu 1, Câu 2... Câu N
+      if (Array.isArray(row.studentAnswers) && row.studentAnswers.length > 0) {
+        if (row.studentAnswers.length > maxAnswersCount) {
+          maxAnswersCount = row.studentAnswers.length;
+        }
+        row.studentAnswers.forEach((ans, qIdx) => {
+          baseRow[`Câu ${qIdx + 1}`] = ans || '';
+        });
+      }
+
+      return baseRow;
+    });
 
     // Tạo file Excel với SheetJS
     const worksheet = XLSX.utils.json_to_sheet(excelRows);
@@ -189,12 +212,13 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Kết quả bài thi");
 
     // Điều chỉnh độ rộng cột tự động
-    const max_width = excelRows.reduce((w, r) => Math.max(w, String(r["Họ và tên"] || '').length), 10);
-    worksheet["!cols"] = [
+    const max_name_width = excelRows.reduce((w, r) => Math.max(w, String(r["Họ và tên"] || '').length), 10);
+    
+    const baseCols = [
       { wch: 5 },   // STT
       { wch: 20 },  // Thời gian nộp
       { wch: 15 },  // Mã SV
-      { wch: Math.max(max_width, 22) }, // Họ và tên
+      { wch: Math.max(max_name_width, 22) }, // Họ và tên
       { wch: 25 },  // Email/Lớp
       { wch: 30 },  // Tên bài thi
       { wch: 15 },  // Số câu đã làm
@@ -204,14 +228,25 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       { wch: 20 }   // Trạng thái
     ];
 
-    const fileName = `KetQua_${examId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    // 💥 Tự động thêm độ rộng (width: 20) cho các cột câu hỏi phụ
+    for (let i = 0; i < maxAnswersCount; i++) {
+      baseCols.push({ wch: 20 });
+    }
+
+    worksheet["!cols"] = baseCols;
+
+    const cleanExamId = (examId || 'KetQua').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `KetQua_${cleanExamId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    
     XLSX.writeFile(workbook, fileName);
 
   } catch (err) {
     alert(`❌ Lỗi khi lấy kết quả: ${err.message}`);
   } finally {
-    buttonElem.disabled = false;
-    buttonElem.textContent = originalText;
+    if (buttonElem) {
+      buttonElem.disabled = false;
+      buttonElem.textContent = originalText;
+    }
   }
 }
 
