@@ -1,4 +1,5 @@
 import { getConfig } from './config.js';
+import { loadExamLibrary } from './library.js'; // Nhập hàm tự động load lại thư viện
 
 let currentExamData = []; // Lưu trữ danh sách câu hỏi hiện tại
 
@@ -285,16 +286,13 @@ async function saveExamToSystem() {
     return;
   }
 
-  const missingIndex = currentExamData.findIndex(q => !q.options.some(o => o.isCorrect));
-  if (missingIndex !== -1) {
-    alert(`⚠️ Câu ${missingIndex + 1} chưa được chọn đáp án đúng! Vui lòng chọn đáp án.`);
-    return;
-  }
-
   const examTitleInput = document.getElementById('examTitleInput');
   const examDurationInput = document.getElementById('examDurationInput');
+  const examMaxViolationsInput = document.getElementById('examMaxViolationsInput');
+
   const examTitle = (examTitleInput && examTitleInput.value.trim()) || 'De_Thi_Trac_Nghiem';
   const duration = (examDurationInput && parseInt(examDurationInput.value)) || 15;
+  const maxViolations = (examMaxViolationsInput && parseInt(examMaxViolationsInput.value)) || 3;
 
   const cleanId = examTitle.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
 
@@ -302,6 +300,7 @@ async function saveExamToSystem() {
     examId: cleanId,
     title: examTitle,
     duration: duration,
+    maxViolations: maxViolations, // Đã thêm trường vi phạm tối đa
     createdAt: new Date().toISOString(),
     totalQuestions: currentExamData.length,
     questions: currentExamData
@@ -310,16 +309,10 @@ async function saveExamToSystem() {
   const jsonString = JSON.stringify(payload, null, 2);
   const config = getConfig();
 
-  const btnSaveExam = document.getElementById('btnSaveExam');
-  if (btnSaveExam) btnSaveExam.disabled = true;
-
-  // 🚀 Đẩy trực tiếp lên GitHub nếu đã cấu hình
-  if (config.ghOwner && config.ghRepo && config.ghToken && config.ghToken !== '••••••••••••••••') {
+  if (config.ghOwner && config.ghRepo && config.ghToken) {
     try {
       const fileName = `${cleanId}.json`;
       const url = `https://api.github.com/repos/${config.ghOwner}/${config.ghRepo}/contents/exams/${fileName}`;
-      
-      // Mã hóa UTF-8 sang Base64 cho GitHub API
       const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
 
       const res = await fetch(url, {
@@ -335,22 +328,19 @@ async function saveExamToSystem() {
         })
       });
 
-      if (!res.ok) {
-        const errErr = await res.json();
-        throw new Error(errErr.message || res.statusText);
+      if (!res.ok) throw new Error('Không thể lưu file lên GitHub');
+
+      alert(`🎉 Đã tạo đề thi thành công!`);
+
+      // 🔄 TỰ ĐỘNG CẬP NHẬT LẠI DANH SÁCH ĐỀ THI TRÊN GIAO DIỆN NGAY LẬP TỨC
+      if (typeof loadExamLibrary === 'function') {
+        await loadExamLibrary();
       }
 
-      alert(`🎉 Đã tạo và xuất bản đề thi thành công lên GitHub!\nTên file: exams/${fileName}`);
     } catch (err) {
-      alert(`⚠️ Không thể tự đẩy file lên GitHub (${err.message}). Hệ thống sẽ tự động tải file JSON xuống máy.`);
-      downloadLocalJson(jsonString, examTitle);
+      alert(`⚠️ Lỗi lưu file: ${err.message}`);
     }
-  } else {
-    alert('⚠️ Chưa cấu hình GitHub PAT. Hệ thống tiến hành tải file JSON xuống máy cá nhân.');
-    downloadLocalJson(jsonString, examTitle);
   }
-
-  if (btnSaveExam) btnSaveExam.disabled = false;
 }
 
 function downloadLocalJson(content, title) {
