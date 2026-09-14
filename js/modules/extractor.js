@@ -1,7 +1,7 @@
-import { getConfig } from './config.js';
-import { loadExamLibrary } from './library.js'; // Nhập hàm tự động load lại thư viện
+import { getConfig, getCurrentUser } from './config.js';
+import { loadExamLibrary } from './library.js';
 
-let currentExamData = []; // Lưu trữ danh sách câu hỏi hiện tại
+let currentExamData = [];
 
 export function initExtractorModule() {
   const btnProcess = document.getElementById('btnProcessWord');
@@ -55,12 +55,10 @@ async function handleWordUpload() {
 }
 
 // 2. Chuyển đổi HTML sang mảng Object Câu hỏi
-// Thay thế hàm parseQuestionsFromHtml trong extractor.js bằng hàm này:
 function parseQuestionsFromHtml(html) {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
-  // Đọc danh sách thẻ p, li
   const elements = Array.from(tempDiv.querySelectorAll('p, li'));
   const questions = [];
   let currentQ = null;
@@ -72,7 +70,6 @@ function parseQuestionsFromHtml(html) {
     const text = el.textContent.trim();
     if (!text) return;
 
-    // Kiểm tra xem chữ cái đầu hoặc toàn bộ dòng phương án có được định dạng bôi đậm/gạch chân không
     const innerHTML = el.innerHTML;
     const isLetterFormatted = /<(b|strong|u)>(\s*([A-D])[\.:\)])<\/(b|strong|u)>/i.test(innerHTML);
     const isWholeFormatted = !!el.querySelector('strong, b, u');
@@ -198,8 +195,6 @@ function addNewQuestion() {
 // 4. Tích hợp AI (Gemini API) giải các câu CHƯA CÓ đáp án
 async function handleAiSuggestAnswers() {
   const config = getConfig();
-  
-  // Sửa đúng tên thuộc tính từ config.js (geminiKey & geminiModel)
   const apiKey = config.geminiKey; 
   const modelName = config.geminiModel || 'gemini-1.5-flash';
 
@@ -208,7 +203,6 @@ async function handleAiSuggestAnswers() {
     return;
   }
 
-  // Lọc danh sách các câu chưa được chọn đáp án đúng
   const unselectedQuestions = [];
   currentExamData.forEach((q, index) => {
     const hasCorrect = q.options.some(opt => opt.isCorrect);
@@ -236,7 +230,6 @@ async function handleAiSuggestAnswers() {
   try {
     const prompt = `Bạn là một chuyên gia giáo dục. Trả về kết quả dưới dạng mảng JSON duy nhất: [{ "index": số_thứ_tự_câu, "correctIndex": chỉ_số_đáp_án_đúng_từ_0_đến_3 }].\n\nDanh sách câu hỏi:\n${JSON.stringify(unselectedQuestions, null, 2)}`;
 
-    // Sử dụng linh hoạt modelName lấy từ Cấu hình hệ thống
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -253,7 +246,6 @@ async function handleAiSuggestAnswers() {
     const data = await response.json();
     const replyText = data.candidates[0]?.content?.parts[0]?.text || '';
     
-    // Trích xuất mảng JSON từ kết quả AI trả về
     const jsonMatch = replyText.match(/\[[\s\S]*\]/);
     if (jsonMatch) {
       const results = JSON.parse(jsonMatch[0]);
@@ -279,6 +271,7 @@ async function handleAiSuggestAnswers() {
     }
   }
 }
+
 // 5. Lưu đề thi (Vừa lưu lên GitHub vừa tải về máy)
 async function saveExamToSystem() {
   if (currentExamData.length === 0) {
@@ -296,11 +289,16 @@ async function saveExamToSystem() {
 
   const cleanId = examTitle.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
 
+  // 💥 LẤY THÔNG TIN USER ĐANG ĐĂNG NHẬP ĐỂ GÁN VÀO ĐỀ THI
+  const currentUser = getCurrentUser();
+  const createdBy = currentUser ? (currentUser.username || currentUser.fullName || 'Admin') : 'Admin';
+
   const payload = {
     examId: cleanId,
     title: examTitle,
     duration: duration,
-    maxViolations: maxViolations, // Đã thêm trường vi phạm tối đa
+    maxViolations: maxViolations,
+    createdBy: createdBy, // 💥 BỔ SUNG TRƯỜNG TÊN NGƯỜI TẠO VÀO DỮ LIỆU ĐỀ THI
     createdAt: new Date().toISOString(),
     totalQuestions: currentExamData.length,
     questions: currentExamData
@@ -322,7 +320,7 @@ async function saveExamToSystem() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `Tạo đề thi mới: ${examTitle}`,
+          message: `Tạo đề thi mới bởi ${createdBy}: ${examTitle}`,
           content: base64Content,
           branch: config.ghBranch || 'main'
         })
@@ -332,7 +330,6 @@ async function saveExamToSystem() {
 
       alert(`🎉 Đã tạo đề thi thành công!`);
 
-      // 🔄 TỰ ĐỘNG CẬP NHẬT LẠI DANH SÁCH ĐỀ THI TRÊN GIAO DIỆN NGAY LẬP TỨC
       if (typeof loadExamLibrary === 'function') {
         await loadExamLibrary();
       }
@@ -340,17 +337,9 @@ async function saveExamToSystem() {
     } catch (err) {
       alert(`⚠️ Lỗi lưu file: ${err.message}`);
     }
+  } else {
+    alert('Vui lòng kiểm tra lại cấu hình GitHub Token / Owner / Repo!');
   }
-}
-
-function downloadLocalJson(content, title) {
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(content);
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `${title}.json`);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
 }
 
 function escapeHTML(str) {
