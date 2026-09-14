@@ -1,0 +1,59 @@
+{
+  "title": "quizz1",
+  "duration": 2,
+  "maxViolations": 2,
+  "createdAt": "2026-09-14T04:49:03.789Z",
+  "createdBy": "thanh",
+  "questions": [
+    {
+      "question": "Sinh thái học là ngành khoa học nghiên cứu về:",
+      "options": [
+        "Mối quan hệ tương tác giữa sinh vật với sinh vật và sinh vật với môi trường.",
+        "“nhà” hay “nơi ở” của sinh vật.",
+        "Các mối quan hệ của sinh vật vơi môi trường sống.",
+        "Về cá thể, quần thể, quần xã và hệ sinh thái."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Ổ sinh thái là",
+      "options": [
+        "nơi thường gặp của loài.",
+        "khu vực sinh sống của sinh vật.",
+        "khoảng không gian sinh thái có tất cả các điều kiện đảm bảo cho sự tồn tại, phát tiển ổn định lâu dài của loài.",
+        "nơi có đầy đủ các yếu tố thuận lợi cho sự tồn tại của sinh vật."
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Khái niệm môi trường nào sau đây là đúng?",
+      "options": [
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố vô sinh và hữu sinh xung quanh sinh vật, trừ nhân tố con người",
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố vô sinh xung quanh sinh vật.",
+        "Môi trường gồm tất cả các nhân tố xung quanh sinh vật, có tác động trực tiếp hoặc gián tiếp tới sinh vật, làm ảnh hưởng đến sự tồn tại, sinh trưởng, phát triển và những hoạt động khác của sinh vật",
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố hữu sinh xung quanh sinh vật"
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Sinh thái học có ý nghĩa trong đời sống là:",
+      "options": [
+        "Tiêu diệt các dịch hại, bảo vệ đời sống cho vật nuôi, cây trồng và đời sống của cả con người.",
+        "Khai thác hợp lý tài nguyên thiên nhiên, duy trì đa dạng sinh học và phát triển tài nguyên cho sự khai thác bền vững.",
+        "Bảo vệ và cải tạo môi trường sống cho con người và các loài sinh vật sống tốt hơn.",
+        "Tất cả các ý trên đều đúng."
+      ],
+      "answer": 3
+    },
+    {
+      "question": "Đối tượng nghiên cứu của sinh thái học là:",
+      "options": [
+        "Là mối quan hệ tương tác giữa sinh vật với sinh vật và sinh vật với môi trường.",
+        "Mối quan hệ tương tác giữa con người với môi trường.",
+        "Mối quan hệ tương tác giữa sinh vật với môi trường",
+        "Là mối quan hệ tương tác giữa con người với sinh vật và con người với môi trường."
+      ],
+      "answer": 0
+    }
+  ]
+}
