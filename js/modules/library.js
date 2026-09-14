@@ -48,7 +48,7 @@ export async function loadExamLibrary() {
           fileName: file.name,
           sha: file.sha,
           title: examData.title || file.name,
-          createdBy: examData.createdBy || 'Unknown',
+          createdBy: examData.createdBy || 'Admin',
           questionCount: examData.questions ? examData.questions.length : 0,
           duration: examData.duration || 15,
           size: (file.size / 1024).toFixed(1) + ' KB',
@@ -60,7 +60,7 @@ export async function loadExamLibrary() {
           fileName: file.name,
           sha: file.sha,
           title: file.name,
-          createdBy: 'Unknown',
+          createdBy: 'Admin',
           questionCount: 0,
           duration: '--',
           size: (file.size / 1024).toFixed(1) + ' KB',
@@ -72,8 +72,11 @@ export async function loadExamLibrary() {
 
     let examList = await Promise.all(examPromises);
 
+    // 💥 LỌC BÀI THI THEO USER GIẢNG VIÊN (NẾU KHÔNG PHẢI ADMIN)
     if (currentUser && currentUser.role === 'lecturer') {
-      examList = examList.filter(exam => exam.createdBy === currentUser.username);
+      examList = examList.filter(exam => 
+        String(exam.createdBy).toLowerCase() === String(currentUser.username).toLowerCase()
+      );
     }
 
     if (examList.length === 0) {
@@ -167,10 +170,8 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       throw new Error('Chưa cấu hình URL Google Apps Script!');
     }
 
-    // 1. Chuẩn hóa examId: Loại bỏ đuôi .json và khoảng trắng thừa
     const cleanExamId = (examId || '').replace(/\.json$/i, '').trim();
 
-    // 2. Gửi đồng thời cleanExamId và examTitle để Google Sheet tra cứu linh hoạt
     const requestUrl = `${webhookUrl}?action=getResults&examId=${encodeURIComponent(cleanExamId)}&examTitle=${encodeURIComponent(examTitle || '')}&_t=${Date.now()}`;
     const res = await fetch(requestUrl);
     const result = await res.json();
@@ -182,9 +183,7 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
 
     let maxAnswersCount = 0;
 
-    // 3. Định dạng dữ liệu các cột cho bảng Excel
     const excelRows = result.data.map((row, index) => {
-      // Tự động Parse mảng đáp án nếu Google Sheet trả về dạng chuỗi String
       let answersArr = row.studentAnswers;
       if (typeof answersArr === 'string') {
         try { answersArr = JSON.parse(answersArr); } catch(e) { answersArr = []; }
@@ -204,7 +203,6 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
         "Trạng thái nộp": row.status || ''
       };
 
-      // Tự động thêm các cột chi tiết từng câu: Câu 1, Câu 2... Câu N
       if (Array.isArray(answersArr) && answersArr.length > 0) {
         if (answersArr.length > maxAnswersCount) {
           maxAnswersCount = answersArr.length;
@@ -217,12 +215,10 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
       return baseRow;
     });
 
-    // 4. Tạo file Excel với SheetJS
     const worksheet = XLSX.utils.json_to_sheet(excelRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Kết quả bài thi");
 
-    // Điều chỉnh độ rộng cột tự động
     const max_name_width = excelRows.reduce((w, r) => Math.max(w, String(r["Họ và tên"] || '').length), 10);
     
     const baseCols = [
