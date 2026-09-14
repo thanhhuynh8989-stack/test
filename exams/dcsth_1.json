@@ -1,0 +1,209 @@
+{
+  "title": "ĐCSTH 1",
+  "duration": 1,
+  "maxViolations": 2,
+  "createdAt": "2026-09-14T02:52:29.440Z",
+  "createdBy": "thanh",
+  "questions": [
+    {
+      "question": "“Môi trường gồm nhiều nhân tố sinh thái gắn bó chặt chẽ với nhau thành một tổ hợp sinh thái và cùng tác động tổng hợp lên cơ thể sinh vật” là nội dung của định luật sinh thái nào?",
+      "options": [
+        "Quy luật tác động tổng hợp.",
+        "Qui luật về giới hạn sinh thái.",
+        "Qui luật tác động qua lại giữa sinh vật với môi trường.",
+        "Quy luật tối thiểu."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Quan hệ hội sinh là mối quan hệ trong đó:",
+      "options": [
+        "Loài 1 có lợi, loài 2 không có hại và chẳng có lợi.",
+        "Loài 1 gây ảnh hưởng lên loài 2, loài 1 không bị ảnh hưởng.",
+        "Hai loài không gây ảnh hưởng cho nhau.",
+        "Cả hai loài có lợi nhưng không bắt buộc."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Khái niệm nào sau đây là đúng:",
+      "options": [
+        "Ổ sinh thái là một phần của môi trường vật lý, mà ở đó có sự thống nhất của các yếu tố cao hơn so với môi trường, tác động lên đời sống sinh vật.",
+        "Ổ sinh thái là không gian cư trú của sinh vật hoặc là không gian mà ở đó sinh vật thường hay gặp.",
+        "Yếu tố sinh thái là những yếu tố môi trường khi chúng tác động lên đời sống sinh vật làm cho sinh vật chết đi.",
+        "Yếu tố sinh thái là các thực thể hay hiện tượng tự nhiên cấu trúc nên môi trường."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Một quần thể với cấu trúc 3 nhóm tuổi: trước sinh sản, đang sinh sản và sau sinh sản sẽ bị diệt vong khi mất đi nhóm:",
+      "options": [
+        "Trước sinh sản.",
+        "Đang sinh sản.",
+        "Trước và đang sinh sản.",
+        "Đang và sau sinh sản."
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Mật độ cá thể trong quần thể là nhân tố điều chỉnh:",
+      "options": [
+        "Cấu trúc tuổi của quần thể.",
+        "Kiểu phân bố cá thể của quần thể.",
+        "Sức sinh sản và mức độ tử vong các cá thể trong quần thể.",
+        "Mối quan hệ giữa các cá thể trong quần thể."
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Đặc trưng nào sau đây là của quần thể sinh vật?",
+      "options": [
+        "Loài ưu thế.",
+        "Mật độ.",
+        "Loài đặc trưng.",
+        "Độ đa dạng."
+      ],
+      "answer": 1
+    },
+    {
+      "question": "Hình thức phân bố cá thể đồng đều trong quần thể có ý nghĩa sinh thái là",
+      "options": [
+        "Các cá thể hỗ trợ nhau chống lại điều kiện bất lợi của môi trường.",
+        "Các cá thể tận dụng nguồn sống từ môi trường,.",
+        "Các đáp án đều đúng.",
+        "Giảm mức độ cạnh tranh giữa các cá thể trong quần thể ."
+      ],
+      "answer": 3
+    },
+    {
+      "question": "Quần xã là:",
+      "options": [
+        "Tất cả các đáp án trên đều đúng.",
+        "Quần xã là một tổ hợp bất kỳ các quần thể có tổ chức, có cấu trúc tương đối đồng nhất về thành phần loài và hình dạng ngoài, phân bố trong một khu vực và không gian nhất định của môi trường, có những mối quan hệ dinh dưỡng, trao đổi chất và sử dụng một nguồn sống chung.",
+        "Một thành viên sống của các hệ sinh thái.",
+        "Tập hợp các quần thể thuộc nhiều loài, phân bố trong một sinh cảnh xác định, ở đấy chúng có quan hệ với nhau và với môi trường để tồn tại và phát triển một cách ổn định theo thời gian."
+      ],
+      "answer": 3
+    },
+    {
+      "question": "Xích thức ăn “Cỏ 🡪 sâu 🡪 ếch 🡪 rắn 🡪 chim đại bàng” thuộc loại:",
+      "options": [
+        "Xích thức ăn thẩm thấu.",
+        "Xích thức ăn phế liệu.",
+        "Xích thức ăn chăn nuôi.",
+        "Đáp án A, C là các đáp án đúng."
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Loài có phổ thức ăn rộng là loài:",
+      "options": [
+        "Có khả năng tham gia vào nhiều bậc dinh dưỡng.",
+        "Ăn tạp.",
+        "Sinh vật bậc cao.",
+        "Sinh vật phân hủy."
+      ],
+      "answer": 1
+    },
+    {
+      "question": "Loại tháp sinh thái nào sau đây luôn có đặc điểm “đáy to ở dưới, càng lên trên càng nhỏ dần”",
+      "options": [
+        "Tháp năng lượng.",
+        "Tháp số lượng.",
+        "Tháp sinh vật lượng.",
+        "Đáp án A và B là đáp án đúng."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Các mối quan hệ nào sau đây được xếp vào nhóm mối quan hệ tương tác âm",
+      "options": [
+        "Hỗ sinh, cạnh tranh, ký sinh - vật chủ, vật dữ - con mồi.",
+        "Hãm sinh, cạnh tranh, ký sinh - vật chủ, vật dữ - con mồi.",
+        "Hãm sinh, cạnh tranh, tiền hợp tác, vật dữ - con mồi.",
+        "Hãm sinh, hội sinh, ký sinh - vật chủ, vật dữ - con mồi."
+      ],
+      "answer": 1
+    },
+    {
+      "question": "Virus HIV và vi khuẩn E.coli đều gây bệnh cho người. Hai nhóm vi sinh vật này có mối quan hệ như thế nào với nhau?",
+      "options": [
+        "Cạnh tranh.",
+        "Hỗ sinh.",
+        "Trung tính.",
+        "Ký sinh - vật chủ."
+      ],
+      "answer": 2
+    },
+    {
+      "question": "Các loài sinh vật sống trong phá Tam Giang - Cầu Hai được gọi là:",
+      "options": [
+        "Quần xã sinh vật.",
+        "Nhóm sinh vật phân giải.",
+        "Các quần thể cá.",
+        "Nhóm sinh vật dị dưỡng."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Các đặc trưng cơ bản của quần xã là",
+      "options": [
+        "thành phần loài, sự phân bố các cá thể trong quần xã, quan hệ dinh dưỡng của các nhóm loài.",
+        "độ phong phú, sự phân bố các cá thể trong quần xã.",
+        "thành phần loài, sức sinh sản và sự tử vong.",
+        "thành phần loài, tỉ lệ nhóm tuổi, mật độ."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Sự phân bố của một loài trong quần xã thường phụ thuộc chủ yếu vào yếu tố",
+      "options": [
+        "nhu cầu về nguồn sống.",
+        "thay đổi do quá trình tự nhiên.",
+        "thay đổi do hoạt động của con người.",
+        "diện tích của quần xã."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Môi trường sống là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố sinh thái:",
+      "options": [
+        "Vô sinh và hữu sinh ảnh hưởng trực tiếp hoặc gián tiếp đến đời sống của sinh vật.",
+        "Vô sinh và hữu sinh ảnh hưởng trực tiếp đến đời sống của sinh vật.",
+        "Hữu sinh ảnh hưởng trực tiếp đến đời sống của sinh vật.",
+        "Hữu sinh ảnh hưởng trực tiếp hoặc gián tiếp đến đời sống của sinh vật."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Những loài có giới hạn sinh thái rộng đối với nhiều nhân tố sinh thái chúng có vùng phân bố:",
+      "options": [
+        "hạn chế.",
+        "hẹp.",
+        "vừa phải.",
+        "rộng."
+      ],
+      "answer": 3
+    },
+    {
+      "question": "Đối tượng nghiên cứu của sinh thái học là:",
+      "options": [
+        "Là mối quan hệ tương tác giữa sinh vật với sinh vật và sinh vật với môi trường.",
+        "Mối quan hệ tương tác giữa con người với môi trường.",
+        "Mối quan hệ tương tác giữa sinh vật với môi trường",
+        "Là mối quan hệ tương tác giữa con người với sinh vật và con người với môi trường."
+      ],
+      "answer": 0
+    },
+    {
+      "question": "Khái niệm môi trường nào sau đây là đúng?",
+      "options": [
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố vô sinh và hữu sinh xung quanh sinh vật, trừ nhân tố con người",
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố vô sinh xung quanh sinh vật.",
+        "Môi trường gồm tất cả các nhân tố xung quanh sinh vật, có tác động trực tiếp hoặc gián tiếp tới sinh vật, làm ảnh hưởng đến sự tồn tại, sinh trưởng, phát triển và những hoạt động khác của sinh vật",
+        "Môi trường là nơi sinh sống của sinh vật bao gồm tất cả các nhân tố hữu sinh xung quanh sinh vật"
+      ],
+      "answer": 2
+    }
+  ]
+}
