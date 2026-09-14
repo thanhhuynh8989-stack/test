@@ -1,192 +1,196 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang Quản Trị Đề Thi</title>
-  <link rel="stylesheet" href="css/admin.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang Quản Trị Đề Thi</title>
+<link rel="stylesheet" href="css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <div class="admin-container">
-    <header class="admin-header">
-      <h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
-      <p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
-      
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
-        <div id="currentUserDisplay" style="font-size: 14px; color: #334155;"></div>
-        <a href="exam.html" class="btn-link" target="_blank">Mở Trang Làm Bài &rarr;</a>
-      </div>
-    </header>
+<div class="admin-container">
+<header class="admin-header">
+<h1>TRANG QUẢN TRỊ ĐỀ THI</h1>
+<p>Quản lý thư viện đề thi & Kích hoạt 1-Click lên GitHub Pages</p>
 
-    <!-- Section 1: Cấu hình kết nối (Chỉ dành cho Admin tổng) -->
-    <section class="card" id="sectionConfig">
-      <h2>Cấu Hình Kết Nối</h2>
-      <form id="configForm" class="form-grid">
-        <div class="form-group">
-          <label for="ghOwner">GitHub Owner (Tài khoản):</label>
-          <input type="text" id="ghOwner" value="thanhhuynh8989-stack">
-        </div>
-        <div class="form-group">
-          <label for="ghRepo">GitHub Repository (Kho chứa):</label>
-          <input type="text" id="ghRepo" value="test">
-        </div>
-        <div class="form-group">
-          <label for="ghBranch">Branch (Nhánh):</label>
-          <input type="text" id="ghBranch" value="main">
-        </div>
-        <div class="form-group">
-          <label for="ghToken">GitHub Personal Access Token (PAT):</label>
-          <input type="password" id="ghToken" value="••••••••••••••••">
-        </div>
-        <div class="form-group">
-          <label for="geminiKey">Gemini API Key:</label>
-          <input type="password" id="geminiKey" value="••••••••••••••••">
-        </div>
-        <div class="form-group">
-          <label>Tên Model Gemini:</label>
-          <div class="input-inline">
-            <select id="geminiSelect">
-              <option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng - Nhanh & Mới nhất)</option>
-              <option value="gemini-2.5-pro">gemini-2.5-pro (Chính xác cao cho bài tập phức tạp)</option>
-              <option value="gemini-3.6-flash">gemini-3.6-flash</option>
-              <option value="gemini-3.7-flash">gemini-3.7-flash</option>
-              <option value="custom">-- Nhập tên Model khác --</option>
-            </select>
-            <input type="text" id="geminiModelCustom" placeholder="Nhập tên model thủ công..." style="display: none;">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="webhookUrl">URL Google Webhook (Nộp Điểm):</label>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #cbd5e1;">
+<div id="currentUserDisplay" style="font-size: 14px; color: #334155;"></div>
+<a href="exam.html" class="btn-link" target="_blank">Mở Trang Làm Bài &rarr;</a>
+</div>
+</header>
+
+<!-- Section 1: Cấu hình kết nối (Chỉ dành cho Admin tổng) -->
+<section class="card" id="sectionConfig">
+<h2>Cấu Hình Kết Nối</h2>
+<form id="configForm" class="form-grid">
+<div class="form-group">
+<label for="ghOwner">GitHub Owner (Tài khoản):</label>
+<input type="text" id="ghOwner" value="thanhhuynh8989-stack">
+</div>
+<div class="form-group">
+<label for="ghRepo">GitHub Repository (Kho chứa):</label>
+<input type="text" id="ghRepo" value="test">
+</div>
+<div class="form-group">
+<label for="ghBranch">Branch (Nhánh):</label>
+<input type="text" id="ghBranch" value="main">
+</div>
+<div class="form-group">
+<label for="ghToken">GitHub Personal Access Token (PAT):</label>
+<input type="password" id="ghToken" value="••••••••••••••••">
+</div>
+<div class="form-group">
+<label for="geminiKey">Gemini API Key:</label>
+<input type="password" id="geminiKey" value="••••••••••••••••">
+</div>
+<div class="form-group">
+<label>Tên Model Gemini:</label>
+<div class="input-inline">
+<select id="geminiSelect">
+<option value="gemini-2.5-flash">gemini-2.5-flash (Khuyên dùng - Nhanh & Mới nhất)</option>
+<option value="gemini-2.5-pro">gemini-2.5-pro (Chính xác cao cho bài tập phức tạp)</option>
+<option value="gemini-3.6-flash">gemini-3.6-flash</option>
+<option value="gemini-3.7-flash">gemini-3.7-flash</option>
+<option value="custom">-- Nhập tên Model khác --</option>
+</select>
+<input type="text" id="geminiModelCustom" placeholder="Nhập tên model thủ công..." style="display: none;">
+</div>
+</div>
+<div class="form-group">
+<label for="webhookUrl">URL Google Webhook (Nộp Điểm):</label>
+          <input type="text" id="webhookUrl" value="https://script.google.com/macros/s/...">
           <input type="text" id="webhookUrl" value="https://script.google.com/macros/s/AKfycbz8KOnjYwEln3_3YodbYfBkvnVr61hIHtfgRX6Nls9BeHSi4-Yb46A3zZLIAVTDZW4/exec">
-        </div>
-        <div class="form-actions">
-          <span class="status-badge">Chưa kiểm tra cấu hình</span>
-          <button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
-        </div>
-      </form>
-    </section>
+</div>
+<div class="form-actions">
+<span class="status-badge">Chưa kiểm tra cấu hình</span>
+<button type="submit" class="btn btn-primary">Lưu Cấu Hình</button>
+</div>
+</form>
+</section>
 
-    <!-- Section 2: Danh sách Giảng viên (Chỉ dành cho Admin tổng) -->
-    <section class="card" id="sectionLecturers">
-      <h2>Quản Lý Danh Sách Giảng Viên</h2>
-      
-      <form id="addLecturerForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
-        <div>
-          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Tài khoản (Username):</label>
-          <input type="text" id="gvUsername" placeholder="ví dụ: gv_nguyenvana" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-        <div>
-          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Mật khẩu:</label>
-          <input type="password" id="gvPassword" placeholder="Nhập mật khẩu" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-        <div>
-          <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Họ và tên Giảng viên:</label>
-          <input type="text" id="gvFullName" placeholder="ví dụ: Nguyễn Văn A" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
-        </div>
-        <div style="display:flex; align-items:flex-end;">
-          <button type="submit" class="btn btn-primary" style="width:100%; height:38px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">➕ Thêm Giảng Viên</button>
-        </div>
-      </form>
+<!-- Section 2: Danh sách Giảng viên (Chỉ dành cho Admin tổng) -->
+<section class="card" id="sectionLecturers">
+<h2>Quản Lý Danh Sách Giảng Viên</h2>
 
-      <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-        <thead>
-          <tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
-            <th style="padding: 10px;">Tài khoản</th>
-            <th style="padding: 10px;">Họ & Tên</th>
-            <th style="padding: 10px;">Vai trò</th>
-            <th style="padding: 10px;">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody id="lecturerTableBody">
-          <tr><td colspan="4" class="empty-msg" style="padding: 15px; text-align: center; color: #64748b;">⏳ Đang tải danh sách tài khoản...</td></tr>
-        </tbody>
-      </table>
-    </section>
+<form id="addLecturerForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+<div>
+<label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Tài khoản (Username):</label>
+<input type="text" id="gvUsername" placeholder="ví dụ: gv_nguyenvana" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+</div>
+<div>
+<label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Mật khẩu:</label>
+<input type="password" id="gvPassword" placeholder="Nhập mật khẩu" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+</div>
+<div>
+<label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#475569;">Họ và tên Giảng viên:</label>
+<input type="text" id="gvFullName" placeholder="ví dụ: Nguyễn Văn A" required style="width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+</div>
+<div style="display:flex; align-items:flex-end;">
+<button type="submit" class="btn btn-primary" style="width:100%; height:38px; background:#2563eb; color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">➕ Thêm Giảng Viên</button>
+</div>
+</form>
 
-    <!-- Section 3: Trích xuất bằng AI (Cả Admin và Giảng viên) -->
-    <!-- KHU VỰC 1: TẢI FILE WORD -->
-    <div class="form-group">
-      <label for="wordFileInput">Chọn File Đề Thi Word (.docx):</label>
-      <input type="file" id="wordFileInput" accept=".docx" class="form-control">
+<table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+<thead>
+<tr style="background: #f8fafc; text-align: left; border-bottom: 2px solid #e2e8f0;">
+<th style="padding: 10px;">Tài khoản</th>
+<th style="padding: 10px;">Họ & Tên</th>
+<th style="padding: 10px;">Vai trò</th>
+<th style="padding: 10px;">Thao tác</th>
+</tr>
+</thead>
+<tbody id="lecturerTableBody">
+<tr><td colspan="4" class="empty-msg" style="padding: 15px; text-align: center; color: #64748b;">⏳ Đang tải danh sách tài khoản...</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- Section 3: Trích xuất bằng AI (Cả Admin và Giảng viên) -->
+<section class="card">
+<h2>Thêm Đề Thi Mới Vào Thư Viện</h2>
+<form id="extractForm" class="form-grid">
+<!-- KHU VỰC 1: TẢI FILE WORD -->
+<div class="form-group">
+  <label for="wordFileInput">Chọn File Đề Thi Word (.docx):</label>
+  <input type="file" id="wordFileInput" accept=".docx" class="form-control">
+</div>
+<div class="form-actions" style="margin-top: 10px;">
+  <button type="button" id="btnProcessWord" class="btn btn-success">
+    📄 Trích Xuất & Xem Trước Đề Thi
+  </button>
+</div>
+
+<!-- KHU VỰC 2: KHUNG XEM TRƯỚC VÀ CHỈNH SỬA ĐỀ THI (PREVIEW AREA) -->
+<div id="sectionPreview" style="display: none; margin-top: 25px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
+  <h3 style="margin-top:0; color:#1e293b;">📋 Xem Trước & Chỉnh Sửa Đề Thi</h3>
+  
+  <!-- Cấu hình tên & thời gian đề thi -->
+  <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="flex: 2; min-width: 250px;">
+      <label style="font-weight: 600; display: block; margin-bottom: 5px;">Tên bài thi / Đề thi:</label>
+      <input type="text" id="examTitleInput" placeholder="Ví dụ: Đề thi Giữa kỳ Triết học" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
     </div>
-    <div class="form-actions" style="margin-top: 10px;">
-      <button type="button" id="btnProcessWord" class="btn btn-success">
-        📄 Trích Xuất & Xem Trước Đề Thi
-      </button>
+    <div style="flex: 1; min-width: 120px;">
+      <label style="font-weight: 600; display: block; margin-bottom: 5px;">Thời gian (phút):</label>
+      <input type="number" id="examDurationInput" value="15" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
     </div>
-    
-    <!-- KHU VỰC 2: KHUNG XEM TRƯỚC VÀ CHỈNH SỬA ĐỀ THI (PREVIEW AREA) -->
-    <div id="sectionPreview" style="display: none; margin-top: 25px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;">
-      <h3 style="margin-top:0; color:#1e293b;">📋 Xem Trước & Chỉnh Sửa Đề Thi</h3>
-      
-      <!-- Cấu hình tên & thời gian đề thi -->
-      <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
-        <div style="flex: 2; min-width: 250px;">
-          <label style="font-weight: 600; display: block; margin-bottom: 5px;">Tên bài thi / Đề thi:</label>
-          <input type="text" id="examTitleInput" placeholder="Ví dụ: Đề thi Giữa kỳ Triết học" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-        </div>
-        <div style="flex: 1; min-width: 120px;">
-          <label style="font-weight: 600; display: block; margin-bottom: 5px;">Thời gian (phút):</label>
-          <input type="number" id="examDurationInput" value="15" min="1" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px;">
-        </div>
-      </div>
-    
-      <!-- Thanh công cụ điều khiển Preview -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-        <button type="button" id="btnAddQuestion" class="btn" style="background: #0284c7; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
-          ➕ Thêm câu hỏi
-        </button>
-        <button type="button" id="btnAiSuggest" class="btn" style="background: #7c3aed; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
-          🤖 AI Gợi Ý Đáp Án
-        </button>
-        <button type="button" id="btnSaveExam" class="btn" style="background: #16a34a; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-          💾 Lưu & Xuất Bản Lên Thư Viện (GitHub)
-        </button>
-      </div>
-    
-      <!-- Nơi hiển thị danh sách câu hỏi -->
-      <div id="previewContainer"></div>
-    </div>
-
-        <!-- Thanh tiến trình xử lý -->
-        <div id="progressContainer" style="display: none; margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #334155;">
-            <span id="progressStatus">⏳ Đang chuẩn bị...</span>
-            <span id="progressPercent" style="color: #059669;">0%</span>
-          </div>
-          <div style="width: 100%; height: 10px; background-color: #cbd5e1; border-radius: 5px; overflow: hidden;">
-            <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.3s ease;"></div>
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <!-- Section 4: Thư viện đề thi (Phân quyền dữ liệu theo User) -->
-    <section class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h2 style="border: none; margin: 0; padding: 0;">Thư Viện Đề Thi Trực Tuyến</h2>
-        <button id="btnRefresh" class="btn btn-secondary">Làm Mới Danh Sách</button>
-      </div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Tên Đề Thi</th>
-            <th>Kích Thước</th>
-            <th>Trạng Thái</th>
-            <th>Hành Động (Action)</th>
-          </tr>
-        </thead>
-        <tbody id="libraryTableBody">
-          <tr>
-            <td colspan="4" class="empty-msg">Chưa có thư mục exams/. Hãy trích xuất đề đầu tiên bên trên để tự động tạo thư viện!</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <!-- Thanh công cụ điều khiển Preview -->
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+    <button type="button" id="btnAddQuestion" class="btn" style="background: #0284c7; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
+      ➕ Thêm câu hỏi
+    </button>
+    <button type="button" id="btnAiSuggest" class="btn" style="background: #7c3aed; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;">
+      🤖 AI Gợi Ý Đáp Án
+    </button>
+    <button type="button" id="btnSaveExam" class="btn" style="background: #16a34a; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      💾 Lưu & Xuất Bản Lên Thư Viện (GitHub)
+    </button>
+  </div>
+
+  <!-- Nơi hiển thị danh sách câu hỏi -->
+  <div id="previewContainer"></div>
+</div>
+
+<!-- Thanh tiến trình xử lý -->
+<div id="progressContainer" style="display: none; margin-top: 16px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+<div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #334155;">
+<span id="progressStatus">⏳ Đang chuẩn bị...</span>
+<span id="progressPercent" style="color: #059669;">0%</span>
+</div>
+<div style="width: 100%; height: 10px; background-color: #cbd5e1; border-radius: 5px; overflow: hidden;">
+<div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.3s ease;"></div>
+</div>
+</div>
+</form>
+</section>
+
+<!-- Section 4: Thư viện đề thi (Phân quyền dữ liệu theo User) -->
+<section class="card">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+<h2 style="border: none; margin: 0; padding: 0;">Thư Viện Đề Thi Trực Tuyến</h2>
+<button id="btnRefresh" class="btn btn-secondary">Làm Mới Danh Sách</button>
+</div>
+<table class="data-table">
+<thead>
+<tr>
+<th>Tên Đề Thi</th>
+<th>Kích Thước</th>
+<th>Trạng Thái</th>
+<th>Hành Động (Action)</th>
+</tr>
+</thead>
+<tbody id="libraryTableBody">
+<tr>
+<td colspan="4" class="empty-msg">Chưa có thư mục exams/. Hãy trích xuất đề đầu tiên bên trên để tự động tạo thư viện!</td>
+</tr>
+</tbody>
+</table>
+</section>
+</div>
+
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
