@@ -1,4 +1,4 @@
-import { getConfig } from './config.js';
+import { getConfig, getCurrentUser } from './config.js';
 import { loadExamLibrary } from './library.js';
 
 // Hàm cập nhật trạng thái Progress Bar
@@ -101,12 +101,13 @@ export function initExtractorModule() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const config = getConfig();
+    const currentUser = getCurrentUser(); // 🔥 Lấy thông tin user hiện tại
 
     const title = document.getElementById('examTitle').value.trim();
     const duration = document.getElementById('examDuration').value;
     const maxViolations = document.getElementById('maxViolations').value;
     const fileInput = document.getElementById('docxFile');
-
+    
     if (!title) return alert('Vui lòng nhập tên bộ đề thi!');
     if (!fileInput.files || fileInput.files.length === 0) return alert('Vui lòng chọn file đề thi Word (.docx)!');
     if (!config.geminiKey) return alert('Vui lòng nhập Gemini API Key ở Mục 1!');
@@ -172,6 +173,7 @@ export function initExtractorModule() {
         duration: parseInt(duration) || 15,
         maxViolations: parseInt(maxViolations) || 3,
         createdAt: new Date().toISOString(),
+        createdBy: currentUser ? currentUser.username : 'admin', // 🔥 Gán mã giảng viên tạo đề
         questions: questions
       };
 
