@@ -105,7 +105,7 @@ export async function loadExamLibrary() {
               <a href="${examUrl}" target="_blank" class="btn btn-primary" style="padding: 5px 10px; font-size: 12px; text-decoration: none;">🚀 Mở Đề</a>
               <button data-url="${examUrl}" class="btn btn-secondary btn-copy-link" style="padding: 5px 10px; font-size: 12px; cursor: pointer;">📋 Lấy Link</button>
               <button data-examid="${exam.examId}" data-title="${safeTitle}" class="btn btn-export-excel" style="padding: 5px 10px; font-size: 12px; background-color: #059669; color: #fff; border: none; border-radius: 4px; cursor: pointer;">📊 Kết Quả</button>
-              <a href="${exam.htmlUrl}" target="_blank" class="btn-link" style="color: #64748b; font-size: 12px;">JSON</a>
+             
               <button data-filename="${exam.fileName}" data-sha="${exam.sha}" data-title="${safeTitle}" class="btn btn-delete-exam" style="padding: 5px 10px; font-size: 12px; background-color: #ef4444; color: #fff; border: none; border-radius: 4px; cursor: pointer;">🗑️ Xóa</button>
             </div>
           </td>
