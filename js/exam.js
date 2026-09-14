@@ -27,7 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const res = await fetch(`exams/${cleanExamId}.json`);
     if (!res.ok) throw new Error(`Không tìm thấy file đề thi "exams/${cleanExamId}.json" trên hệ thống.`);
-    examData = await res.json();
+    const rawData = await res.json();
+    
+    // 💥 Xử lý tráo câu hỏi và tráo phương án ngay khi tải đề thi
+    examData = prepareExamForStudent(rawData);
   } catch (err) {
     alert(`Lỗi: ${err.message}`);
     return;
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (elName) elName.textContent = studentInfo.name;
       if (elId) elId.textContent = studentInfo.id;
       if (elClass) elClass.textContent = studentInfo.class;
-      if (elTitle) elTitle.textContent = examData.title || 'Bài Kiểm Tra';
+      if (elTitle) elTitle.textContent = examData.examTitle || examData.title || 'Bài Kiểm Tra';
 
       document.getElementById('studentModal').style.display = 'none';
       document.getElementById('examContainer').style.display = 'block';
@@ -80,6 +83,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// 💥 Thuật toán Fisher-Yates Shuffle dùng để tráo ngẫu nhiên
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 💥 Chuẩn bị dữ liệu đề thi: Tráo câu hỏi & Tráo phương án
+function prepareExamForStudent(data) {
+  if (!data || !Array.isArray(data.questions)) return data;
+
+  // 1. Tráo thứ tự câu hỏi
+  const shuffledQuestions = shuffleArray(data.questions);
+
+  // 2. Tráo thứ tự các phương án trong từng câu (nếu noShuffleOptions !== true)
+  const processedQuestions = shuffledQuestions.map(q => {
+    let finalOptions = q.options || [];
+    if (!q.noShuffleOptions && Array.isArray(finalOptions)) {
+      finalOptions = shuffleArray(finalOptions);
+    }
+    return {
+      ...q,
+      options: finalOptions
+    };
+  });
+
+  return {
+    ...data,
+    questions: processedQuestions
+  };
+}
+
 // Render câu hỏi an toàn với Escape HTML
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
@@ -90,12 +128,18 @@ function renderQuestions() {
     const qCard = document.createElement('div');
     qCard.style.cssText = 'background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px;';
 
-    let optionsHTML = q.options.map((opt, i) => `
-      <label style="display: block; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.4;">
-        <input type="radio" name="q_${index}" value="${i}" style="margin-right: 8px;">
-        <strong>${String.fromCharCode(65 + i)}.</strong> ${escapeHTML(opt)}
-      </label>
-    `).join('');
+    let optionsHTML = q.options.map((opt, i) => {
+      // Hỗ trợ cả Object đáp án mới {id, text, isCorrect} và chuỗi đáp án cũ
+      const optText = typeof opt === 'object' ? opt.text : opt;
+      const optVal = typeof opt === 'object' && opt.id ? opt.id : i;
+
+      return `
+        <label style="display: block; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.4;">
+          <input type="radio" name="q_${index}" value="${optVal}" style="margin-right: 8px;">
+          <strong>${String.fromCharCode(65 + i)}.</strong> ${escapeHTML(optText)}
+        </label>
+      `;
+    }).join('');
 
     qCard.innerHTML = `
       <div style="font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b;">
@@ -179,7 +223,7 @@ function startTimer() {
   }, 1000);
 }
 
-// Xử lý nộp bài
+// Xử lý nộp bài & Chấm điểm theo Thẻ isCorrect
 async function finishExam() {
   if (isExamSubmitted) return;
   isExamSubmitted = true;
@@ -188,14 +232,41 @@ async function finishExam() {
   let correctCount = 0;
   let answeredCount = 0;
   const totalQuestions = examData.questions.length;
+  const studentAnswers = []; // Mảng chứa 50+ câu trả lời chi tiết của thí sinh
 
   examData.questions.forEach((q, index) => {
     const selected = document.querySelector(`input[name="q_${index}"]:checked`);
     if (selected) {
       answeredCount++;
-      if (parseInt(selected.value) === q.answer) {
-        correctCount++;
+      const selectedVal = selected.value;
+      let selectedOpt = null;
+
+      // Tìm option được chọn
+      if (typeof q.options[0] === 'object') {
+        selectedOpt = q.options.find(o => String(o.id) === String(selectedVal));
+      } else {
+        selectedOpt = q.options[parseInt(selectedVal)];
       }
+
+      if (selectedOpt) {
+        const optText = typeof selectedOpt === 'object' ? selectedOpt.text : selectedOpt;
+        studentAnswers.push(optText); // Lưu nội dung đáp án thí sinh chọn
+
+        // 💥 KIỂM TRA ĐÁP ÁN ĐÚNG THEO THẺ isCorrect (HOẶC CHỈ SỐ CŨ)
+        if (typeof selectedOpt === 'object') {
+          if (selectedOpt.isCorrect === true) {
+            correctCount++;
+          }
+        } else {
+          if (parseInt(selectedVal) === q.answer) {
+            correctCount++;
+          }
+        }
+      } else {
+        studentAnswers.push('Bỏ trống');
+      }
+    } else {
+      studentAnswers.push('Bỏ trống');
     }
   });
 
@@ -213,7 +284,7 @@ async function finishExam() {
 
   const payload = {
     examId: cleanExamId,
-    examTitle: examData.title || '',
+    examTitle: examData.examTitle || examData.title || '',
     studentId: studentInfo.id || '',
     fullName: studentInfo.name || '',
     email: studentInfo.class || '',
@@ -221,20 +292,21 @@ async function finishExam() {
     totalQuestions: totalQuestions,
     score: parseFloat(score),
     violations: violations,
-    status: submitStatus
+    status: submitStatus,
+    studentAnswers: studentAnswers // 💥 Gửi mảng nội dung các câu đã chọn về Webhook
   };
 
   if (targetWebhook && targetWebhook.startsWith('http')) {
     try {
       await fetch(targetWebhook, {
         method: 'POST',
-        mode: 'no-cors', // 💥 BẮT BUỘC: Bỏ qua kiểm tra CORS của trình duyệt
+        mode: 'no-cors', // Bắt buộc: Bỏ qua CORS
         headers: { 
-          'Content-Type': 'text/plain' // 💥 BẮT BUỘC: Dùng text/plain để không kích hoạt yêu cầu Preflight OPTIONS
+          'Content-Type': 'text/plain' // Bắt buộc: Tránh preflight OPTIONS request
         },
         body: JSON.stringify(payload)
       });
-      console.log('Đã gửi dữ liệu tới Webhook thành công!');
+      console.log('Đã gửi dữ liệu bài thi tới Webhook thành công!');
     } catch (err) {
       console.error('Lỗi gửi Webhook:', err);
     }
