@@ -171,7 +171,7 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
     // Định dạng dữ liệu các cột cho bảng Excel
     const excelRows = result.data.map((row, index) => ({
       "STT": index + 1,
-      "Thời gian nộp": row.timestamp ? new Date(row.timestamp).toLocaleString('vi-VN') : '',
+      "Thời gian nộp": row.timestamp || '',
       "Mã sinh viên": row.studentId,
       "Họ và tên": row.fullName,
       "Email/Lớp": row.email,
@@ -189,19 +189,19 @@ async function exportResultsToExcel(examId, examTitle, buttonElem) {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Kết quả bài thi");
 
     // Điều chỉnh độ rộng cột tự động
-    const max_width = excelRows.reduce((w, r) => Math.max(w, r["Họ và tên"].length), 10);
+    const max_width = excelRows.reduce((w, r) => Math.max(w, String(r["Họ và tên"] || '').length), 10);
     worksheet["!cols"] = [
-      { wch: 5 },  // STT
-      { wch: 20 }, // Thời gian nộp
-      { wch: 15 }, // Mã SV
+      { wch: 5 },   // STT
+      { wch: 20 },  // Thời gian nộp
+      { wch: 15 },  // Mã SV
       { wch: Math.max(max_width, 22) }, // Họ và tên
-      { wch: 25 }, // Email/Lớp
-      { wch: 30 }, // Tên bài thi
-      { wch: 15 }, // Số câu đã làm
-      { wch: 15 }, // Tổng số câu
-      { wch: 10 }, // Điểm
-      { wch: 15 }, // Vi phạm
-      { wch: 20 }  // Trạng thái
+      { wch: 25 },  // Email/Lớp
+      { wch: 30 },  // Tên bài thi
+      { wch: 15 },  // Số câu đã làm
+      { wch: 15 },  // Tổng số câu
+      { wch: 10 },  // Điểm
+      { wch: 15 },  // Vi phạm
+      { wch: 20 }   // Trạng thái
     ];
 
     const fileName = `KetQua_${examId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
