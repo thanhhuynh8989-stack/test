@@ -21,16 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await res.json();
 
       if (result.status === 'success' && Array.isArray(result.data)) {
-        // Tìm tài khoản khớp cả username và password
-        const foundUser = result.data.find(
-          u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-        );
+        // Tối ưu: Ép kiểu String để tránh lỗi khi Google Sheet trả về Mật khẩu/Username dạng số
+        const foundUser = result.data.find(u => {
+          const sheetUser = String(u.username || '').trim().toLowerCase();
+          const sheetPass = String(u.password || '').trim();
+          return sheetUser === username.toLowerCase() && sheetPass === password;
+        });
         
         if (foundUser) {
           sessionStorage.setItem('userSession', JSON.stringify({
-            username: foundUser.username,
-            fullName: foundUser.fullName,
-            role: foundUser.role // 'admin' hoặc 'lecturer' đọc từ Sheet
+            username: String(foundUser.username).trim(),
+            fullName: foundUser.fullName || foundUser.username,
+            role: String(foundUser.role || 'lecturer').trim().toLowerCase() // 'admin' hoặc 'lecturer'
           }));
           window.location.href = 'index.html';
           return;
