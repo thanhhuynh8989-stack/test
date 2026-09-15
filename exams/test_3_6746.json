@@ -1,0 +1,409 @@
+{
+  "examId": "test_3_6746",
+  "title": "Test 3",
+  "duration": 15,
+  "maxViolations": 2,
+  "createdBy": "thanh",
+  "createdAt": "2026-09-15T03:20:36.746Z",
+  "totalQuestions": 14,
+  "questions": [
+    {
+      "id": "q_1789442376652_345rp",
+      "question": "<strong>Câu 1. </strong>Một cây được đặt trong buồng kín có ánh sáng bão hòa. Sau vài giờ, độ ẩm tương đối của không khí tăng từ 40% lên 95%, trong khi nhiệt độ, diện tích lá và độ dẫn khí khổng gần như không đổi. Tốc độ thoát hơi nước của cây giảm mạnh. Nguyên nhân trực tiếp nhất là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376652_jdvv0",
+          "text": "Giảm hoạt động của bơm H⁺ ở tế bào khí khổng.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376653_ph02z",
+          "text": "Giảm chênh lệch áp suất hơi nước giữa khoảng gian bào trong lá và không khí bên ngoài.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376653_nyfqa",
+          "text": "Giảm áp suất rễ làm hạn chế dòng nước lên lá.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376653_sq5ua",
+          "text": "Giảm khả năng dẫn nước của hệ mạch gỗ.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376683_d7400",
+      "question": "<strong>Câu 6.</strong> Một cây bị ngập úng kéo dài. Mặc dù thế nước của đất vẫn cao, hàm lượng O₂ ở vùng rễ giảm mạnh. Sau vài ngày, cây xuất hiện hiện tượng héo.<strong> </strong>Nguyên nhân trực tiếp nhất là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376683_p45g4",
+          "text": "Rễ thiếu O₂ làm giảm hấp thu nước và ion khoáng.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376683_5n5rc",
+          "text": "Nước trong đất bị giữ chặt hơn bởi keo đất.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376683_x8wa4",
+          "text": "Mạch gỗ bị tắc hoàn toàn.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376683_v8h9e",
+          "text": "Khí khổng mở rộng quá mức làm cây mất nước nhanh.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376696_xzjmi",
+      "question": "<strong>Câu 12. </strong>Một loài thực vật CAM được đặt trong điều kiện khô hạn kéo dài. Vào ban đêm, CO₂ được cố định thành axit malic và tích lũy trong không bào. Vai trò chủ yếu của quá trình này là",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376696_6eu2d",
+          "text": "Duy trì nguồn CO₂ nội bào cho chu trình Calvin khi khí khổng đóng vào ban ngày.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376696_cqlqt",
+          "text": "Cung cấp carbon trực tiếp cho quá trình tái sinh RuBP trong chu trình Calvin.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376696_i1ezo",
+          "text": "Làm tăng nồng độ CO₂ quanh rubisco vào ban đêm để tăng tốc độ carboxyl hóa.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376696_vnhbs",
+          "text": "Duy trì tốc độ quang phân li nước khi khí khổng đóng vào ban ngày.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_jfwif",
+          "text": "Giả thuyết bị bác bỏ vì kiểu mọc lá không ảnh hưởng đến khả năng thu nhận ánh sáng.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_qbedb",
+          "text": "Giả thuyết chưa được kiểm tra trực tiếp vì cần đánh giá lượng ánh sáng hấp thụ của toàn bộ tán lá, bao gồm mức độ che bóng giữa các lá.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_2q3w2",
+          "text": "Giả thuyết được ủng hộ vì các kiểu mọc lá không làm thay đổi diện tích lá.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_1v95n",
+          "text": "Giả thuyết bị bác bỏ vì ánh sáng hấp thụ của từng lá không phụ thuộc vào vị trí lá.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376746_yc3j8",
+      "question": "<strong>Câu 6</strong>. Một protein được phân lập từ vi khuẩn ưa nhiệt có khối lượng phân tử khoảng <strong>160 kDa</strong> khi được rửa giải qua cột sắc ký lọc gel/kích thước (size-exclusion chromatography). Tuy nhiên, khi protein tinh sạch này được phân tích bằng điện di SDS-PAGE, chỉ xuất hiện <strong>một băng protein khoảng 80 kDa.</strong> Những quan sát này cho biết điều gì về cấu trúc của protein?<br>Kết luận phù hợp nhất là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376746_5uyh7",
+          "text": "Protein là một chuỗi polypeptide đơn có khối lượng 160 kDa, nhưng bị phân hủy một phần trong SDS-PAGE.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_a54nd",
+          "text": "Protein là heterodimer gồm một tiểu đơn vị 80 kDa và một tiểu đơn vị khác không bắt màu bằng Coomassie.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_ed0pj",
+          "text": "Protein nhiều khả năng là homodimer, gồm hai tiểu đơn vị giống nhau, mỗi tiểu đơn vị có khối lượng khoảng 80 kDa.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376746_dq7xy",
+          "text": "Protein gồm bốn tiểu đơn vị, mỗi tiểu đơn vị có khối lượng khoảng 40 kDa.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376746_10wkg",
+      "question": "<strong>Câu 9.</strong> Ở nấm men, codon GAA và GAG đều mã hóa amino acid glutamate. Tuy nhiên, GAA là codon được sử dụng phổ biến và có tRNA tương ứng dồi dào hơn, còn GAG là codon hiếm. Một đột biến thay GAA thành GAG trong vùng mã hóa của gen có thể dẫn đến hiện tượng nào?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376746_05299",
+          "text": "Protein tạo thành bị thay glutamate bằng một amino acid khác.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_bbxdb",
+          "text": "Quá trình dịch mã có thể chậm hơn do tRNA nhận diện GAG có nồng độ thấp hơn.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376746_odtts",
+          "text": "Quá trình phiên mã của gen bị dừng hoàn toàn.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376746_l4vby",
+          "text": "Ribosome không thể bắt đầu dịch mã vì GAG là codon kết thúc.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376809_3mhgt",
+      "question": "<strong>Câu 13</strong>. Một chủng <em>Staphylococcus aureus</em> vẫn tạo rất ít β-lactamase nhưng kháng methicillin mạnh. Phân tích di truyền phát hiện chủng này biểu hiện một Penicillin-Binding Proteins (PBP) có ái lực thấp với β-lactam. Kết luận nào đúng nhất?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_7cidf",
+          "text": "Penicillin không thể đi qua màng tế bào người.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_5q3iy",
+          "text": "Vi khuẩn vẫn có thể tạo liên kết chéo peptidoglycan dù có mặt methicillin.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_kovwq",
+          "text": "Methicillin bị chuyển hóa thành vancomycin.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_wt5v2",
+          "text": "Vi khuẩn không còn cần thành tế bào.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_rbnoc",
+      "question": "<strong>Câu 1.</strong> Hằng năm, rùa xanh (Chelonia mydas) quay trở lại các bãi biển ở Cù Lao Chàm (TP. Đà Nẵng), nơi chúng từng nở để đẻ trứng. Hiện tượng này là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_9f411",
+          "text": "Tập tính học được.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_xtpyy",
+          "text": "Phản xạ có điều kiện.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_ue3cn",
+          "text": "Sự kết hợp giữa tập tính bản năng và các tín hiệu môi trường.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_yqtug",
+          "text": "Tập tính sống theo đàn.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_6gfmr",
+      "question": "<strong>Câu 2.</strong> Mỗi buổi chiều, đàn cò trắng ở khu vực sông Cu Đê (TP. Đà Nẵng) tập trung thành từng đàn lớn để về nơi ngủ. Đây là biểu hiện của:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_n54me",
+          "text": "Tập tính kiếm ăn.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_g3gtf",
+          "text": "Tập tính sống theo đàn.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_0imht",
+          "text": "Tập tính học được.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_ljc4t",
+          "text": "Phản xạ có điều kiện.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_j12d9",
+      "question": "<strong>Câu 3</strong>. Khi phát hiện người hoặc động vật săn mồi đến gần, đàn voọc chà vá chân nâu <em>(Pygathrix nemaeus)</em> ở bán đảo Sơn Trà TP. Đà Nẵng phát ra tiếng kêu báo động để các cá thể khác nhanh chóng lẩn trốn. Đây là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_kaz8g",
+          "text": "Tập tính kiếm ăn.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_f35lb",
+          "text": "Tập tính giao tiếp và bảo vệ đàn.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_xw51e",
+          "text": "Phản xạ có điều kiện.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_ndzld",
+          "text": "Tập tính học được hoàn toàn.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_7bt6g",
+      "question": "<strong>Câu 4. </strong>Hiện tượng nào sau đây thể hiện <strong>tập tính xã hội?</strong>",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_l8e7n",
+          "text": "Đàn voọc chà vá chân nâu (Pygathrix nemaeus) ở bán đảo Sơn Trà phát tín hiệu cảnh báo khi phát hiện kẻ săn mồi.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_cduqp",
+          "text": "Rùa xanh (Chelonia mydas) lên bãi biển Cù Lao Chàm đẻ trứng.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_ctbmo",
+          "text": "Ếch cây phát tiếng kêu vào mùa mưa để thu hút bạn tình.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_05ey7",
+          "text": "Ve sầu lột xác trên thân cây.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_twz31",
+      "question": "<strong>Câu 7</strong>. Chuỗi điều hòa nào sau đây mô tả đúng cơ chế điều hòa chu kỳ ngày – đêm ở người?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_eu22r",
+          "text": "Ánh sáng → võng mạc → vùng dưới đồi → tuyến tùng → melatonin.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_jqbqv",
+          "text": "Ánh sáng → tuyến giáp → vùng dưới đồi → melatonin.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_oz1y0",
+          "text": "Ánh sáng → tuyến yên → tuyến tùng → melatonin.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_zvjpr",
+          "text": "Ánh sáng → tủy thượng thận → tuyến tùng → melatonin.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376810_5jijw",
+      "question": "<strong>Câu 9.</strong> Một hệ sinh thái đồng cỏ có các chuỗi thức ăn:<br>Cỏ → hươu → sói<br>Cỏ → thỏ → sói<br>Cỏ → chuột → diều hâu<br>Nếu một dự án làm giảm 50% diện tích đồng cỏ và loại bỏ hoàn toàn hươu, dự đoán nào hợp lý nhất?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376810_ar2mz",
+          "text": "Sói có thể giảm số lượng do mất nguồn thức ăn lớn và sinh khối cỏ suy giảm.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376810_y8hi8",
+          "text": "Sói chắc chắn tăng số lượng vì còn thỏ.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_mrgvk",
+          "text": "Diều hâu không bị ảnh hưởng vì không ăn hươu.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376810_1cbst",
+          "text": "Sinh vật sản xuất không ảnh hưởng đến động vật ăn thịt.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376846_s84j0",
+      "question": "<strong>Câu 17.</strong> Một bệnh nhân bị <strong>block nhĩ – thất hoàn toàn</strong>, làm mất sự dẫn truyền xung động từ tâm nhĩ xuống tâm thất. Dấu hiệu nào sau đây có khả năng xuất hiện?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376846_v7dc1",
+          "text": "Tim ngừng đập ngay lập tức.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376846_phoc8",
+          "text": "Tâm nhĩ và tâm thất co bóp độc lập với nhau, tâm thất đập chậm hơn bình thường.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376846_yhl00",
+          "text": "Tâm thất co bóp nhanh hơn tâm nhĩ.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376846_wj6uw",
+          "text": "Tâm nhĩ ngừng co bóp, chỉ còn tâm thất co bóp.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789442376871_877xy",
+      "question": "<strong>Câu 23</strong>. Một người vô tình chạm vào mặt nồi đang sôi và rút tay lại gần như ngay lập tức, trong khi cảm giác đau chỉ xuất hiện sau đó một khoảng thời gian rất ngắn. Cơ chế nào dưới đây giải thích đúng nhất hiện tượng này?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789442376871_2o6an",
+          "text": "Não bộ tiếp nhận cảm giác đau trước rồi mới phát lệnh co cơ để rút tay.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376872_i81t3",
+          "text": "Xung thần kinh được xử lý tại tủy sống thông qua cung phản xạ trước khi tín hiệu được truyền lên não tạo cảm giác đau.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789442376872_z67xf",
+          "text": "Các cơ ở cánh tay tự co khi tiếp xúc với nhiệt độ cao mà không cần hệ thần kinh.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789442376872_tejp1",
+          "text": "Tuyến thượng thận tiết adrenaline làm cơ co ngay khi tiếp xúc với vật nóng.",
+          "isCorrect": false
+        }
+      ]
+    }
+  ]
+}
