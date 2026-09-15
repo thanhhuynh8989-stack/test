@@ -39,7 +39,9 @@ export async function parseDocxWithAi(arrayBuffer) {
 function parseQuestionsFromDom(htmlString) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, 'text/html');
-  const elements = Array.from(doc.body.querySelectorAll('p, li, div'));
+  
+  // Lấy danh sách các thẻ khối
+  const blockElements = Array.from(doc.body.querySelectorAll('p, li, div, tr'));
 
   const questions = [];
   let currentQ = null;
@@ -47,41 +49,49 @@ function parseQuestionsFromDom(htmlString) {
   const qRegex = /^(Câu|Cau)\s*\d+[:.]/i;
   const optRegex = /^([A-D])[\.:\)]\s*(.*)/i;
 
-  elements.forEach(el => {
-    const text = el.textContent.trim();
-    const hasImage = el.querySelector('img') !== null;
+  blockElements.forEach(el => {
+    // Tách phần tử thành nhiều dòng nếu bên trong có thẻ <br>
+    const linesHtml = el.innerHTML.split(/<br\s*\/?>/i);
 
-    if (!text && !hasImage) return;
+    linesHtml.forEach(lineHtml => {
+      // Tạo phần tử ảo để lấy text sạch kiểm tra Regex
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = lineHtml;
+      const cleanText = tempDiv.textContent.trim();
+      
+      const hasImage = tempDiv.querySelector('img') !== null;
+      if (!cleanText && !hasImage) return;
 
-    // Lấy nội dung HTML giữ lại các thẻ <img> nằm xen kẽ
-    const innerContent = cleanHtmlContent(el);
+      // Chuẩn hóa HTML dòng (giữ lại <em>, <strong>, <img>, <sub>, <sup>)
+      const cleanLineHtml = lineHtml.trim();
 
-    if (qRegex.test(text)) {
-      if (currentQ) questions.push(currentQ);
-      currentQ = {
-        id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        question: innerContent.replace(qRegex, '').trim(),
-        noShuffleOptions: false,
-        options: []
-      };
-    } else if (currentQ) {
-      const matchOpt = text.match(optRegex);
-      if (matchOpt) {
-        currentQ.options.push({
-          id: 'opt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-          text: innerContent.replace(/^([A-D])[\.:\)]\s*/i, '').trim(),
-          isCorrect: isOptionBold(el)
-        });
-      } else if (currentQ.options.length === 0) {
-        // Nối tiếp văn bản hoặc ảnh nằm ở dòng tiếp theo của câu hỏi
-        currentQ.question += '<br>' + innerContent;
+      if (qRegex.test(cleanText)) {
+        if (currentQ) questions.push(currentQ);
+        currentQ = {
+          id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+          question: cleanLineHtml.replace(qRegex, '').trim(),
+          noShuffleOptions: false,
+          options: []
+        };
+      } else if (currentQ) {
+        const matchOpt = cleanText.match(optRegex);
+        if (matchOpt) {
+          currentQ.options.push({
+            id: 'opt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+            text: cleanLineHtml.replace(/^([A-D])[\.:\)]\s*/i, '').trim(),
+            isCorrect: false
+          });
+        } else if (currentQ.options.length === 0) {
+          // Nối văn bản hoặc ảnh thuộc về phần nội dung câu hỏi
+          currentQ.question += '<br>' + cleanLineHtml;
+        }
       }
-    }
+    });
   });
 
   if (currentQ) questions.push(currentQ);
 
-  // Chuẩn hóa đủ 4 đáp án A, B, C, D
+  // Chuẩn hóa luôn có đủ 4 lựa chọn A, B, C, D
   questions.forEach(q => {
     while (q.options.length < 4) {
       q.options.push({
@@ -94,7 +104,6 @@ function parseQuestionsFromDom(htmlString) {
 
   return questions;
 }
-
 /**
  * Làm sạch HTML nhưng giữ nguyên thẻ <img> với lớp responsive
  */
