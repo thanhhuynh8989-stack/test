@@ -1,16 +1,19 @@
 import { getConfig, getCurrentUser } from './config.js';
 import { loadExamLibrary } from './library.js';
 import { parseDocxWithAi } from './aiParser.js';
+import { parsePdfWithAi } from './pdfParser.js';
 
 let currentExamData = [];
 
 export function initExtractorModule() {
   const btnProcess = document.getElementById('btnProcessWord');
+  const btnProcessPdf = document.getElementById('btnProcessPdf'); // 💥 Thêm nút PDF
   const btnAddQuestion = document.getElementById('btnAddQuestion');
   const btnAiSuggest = document.getElementById('btnAiSuggest');
   const btnSaveExam = document.getElementById('btnSaveExam');
 
   if (btnProcess) btnProcess.addEventListener('click', handleWordUpload);
+  if (btnProcessPdf) btnProcessPdf.addEventListener('click', handlePdfUpload); // 💥 Lắng nghe sự kiện PDF
   if (btnAddQuestion) btnAddQuestion.addEventListener('click', addNewQuestion);
   if (btnAiSuggest) btnAiSuggest.addEventListener('click', handleAiSuggestAnswers);
   if (btnSaveExam) btnSaveExam.addEventListener('click', saveExamToSystem);
@@ -369,4 +372,60 @@ function escapeHTML(str) {
   return String(str || '').replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
+}
+
+async function handlePdfUpload() {
+  const fileInput = document.getElementById('pdfFileInput');
+  if (!fileInput || !fileInput.files[0]) {
+    alert('Vui lòng chọn 1 file PDF đề thi!');
+    return;
+  }
+
+  const btnProcess = document.getElementById('btnProcessPdf');
+  const originalBtnText = btnProcess ? btnProcess.textContent : '';
+  const file = fileInput.files[0];
+
+  try {
+    if (btnProcess) {
+      btnProcess.disabled = true;
+      btnProcess.textContent = '⏳ Đang khởi tạo AI đọc PDF...';
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Gọi mô-đun AI bóc tách PDF và cập nhật tiến trình trang
+    currentExamData = await parsePdfWithAi(arrayBuffer, (currentPage, totalPages) => {
+      if (btnProcess) {
+        btnProcess.textContent = `⏳ AI đang đọc trang ${currentPage}/${totalPages}...`;
+      }
+    });
+
+    if (!currentExamData || currentExamData.length === 0) {
+      alert('Không tìm thấy câu hỏi nào trong file PDF!');
+      return;
+    }
+
+    // Render giao diện xem trước đề thi
+    renderPreviewUI();
+
+    // Auto Render công thức KaTeX
+    if (typeof renderMathInElement === 'function') {
+      const previewBox = document.getElementById('previewContainer') || document.body;
+      renderMathInElement(previewBox, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    }
+
+  } catch (err) {
+    alert('Lỗi xử lý file PDF: ' + err.message);
+  } finally {
+    if (btnProcess) {
+      btnProcess.disabled = false;
+      btnProcess.textContent = originalBtnText || 'Trích Xuất PDF';
+    }
+  }
 }
