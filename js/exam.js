@@ -168,7 +168,7 @@ function prepareExamForStudent(data) {
   };
 }
 
-// Render câu hỏi an toàn với Escape HTML
+// Render câu hỏi cho phép hiển thị rich HTML (ảnh, in nghiêng, công thức)
 function renderQuestions() {
   const container = document.getElementById('questionsContainer');
   if (!container) return;
@@ -180,29 +180,45 @@ function renderQuestions() {
 
     let optionsHTML = q.options.map((opt, i) => {
       // Hỗ trợ cả Object đáp án mới {id, text, isCorrect} và chuỗi đáp án cũ
-      const optText = typeof opt === 'object' ? opt.text : opt;
+      const optText = typeof opt === 'object' ? (opt.text || '') : opt;
       const optVal = typeof opt === 'object' && opt.id ? opt.id : i;
 
+      // Đã loại bỏ escapeHTML(optText) để render thẻ HTML thực tế
       return `
-        <label style="display: block; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.4;">
-          <input type="radio" name="q_${index}" value="${optVal}" style="margin-right: 8px;">
-          <strong>${String.fromCharCode(65 + i)}.</strong> ${escapeHTML(optText)}
+        <label style="display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; cursor: pointer; font-size: 15px; line-height: 1.5;">
+          <input type="radio" name="q_${index}" value="${optVal}" style="margin-top: 4px; flex-shrink: 0;">
+          <div>
+            <strong>${String.fromCharCode(65 + i)}.</strong> ${optText}
+          </div>
         </label>
       `;
     }).join('');
 
+    // Đã loại bỏ escapeHTML(q.question) để render hình ảnh và thẻ xuống dòng
     qCard.innerHTML = `
-      <div style="font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b;">
-        Câu ${index + 1}: ${escapeHTML(q.question)}
+      <div style="font-weight: 600; font-size: 16px; margin-bottom: 12px; color: #1e293b; line-height: 1.5;">
+        Câu ${index + 1}: ${q.question}
       </div>
       <div>${optionsHTML}</div>
     `;
     container.appendChild(qCard);
   });
 
+  // Tự động quét và render công thức toán KaTeX (nếu có)
+  if (typeof renderMathInElement === 'function') {
+    renderMathInElement(container, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false }
+      ],
+      throwOnError: false
+    });
+  }
+
+  // Xóa bớt listener cũ tránh lặp sự kiện trước khi gắn lại
+  container.removeEventListener('change', updateProgressTracker);
   container.addEventListener('change', updateProgressTracker);
 }
-
 // Tiến độ làm bài
 function updateProgressTracker() {
   if (!examData || !examData.questions) return;
