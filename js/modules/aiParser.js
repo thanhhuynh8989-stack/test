@@ -39,7 +39,13 @@ export async function parseDocxWithAi(arrayBuffer) {
 function parseQuestionsFromDom(htmlString) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, 'text/html');
-  
+
+  // Gắn class CSS responsive trực tiếp cho mọi thẻ <img> tìm thấy trong file Word
+  doc.querySelectorAll('img').forEach(img => {
+    img.classList.add('exam-img');
+    img.removeAttribute('style'); // Xóa kích thước cố định từ Word để tránh vỡ khung
+  });
+
   // Lấy danh sách các thẻ khối
   const blockElements = Array.from(doc.body.querySelectorAll('p, li, div, tr'));
 
@@ -58,7 +64,7 @@ function parseQuestionsFromDom(htmlString) {
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = lineHtml;
       const cleanText = tempDiv.textContent.trim();
-      
+
       const hasImage = tempDiv.querySelector('img') !== null;
       if (!cleanText && !hasImage) return;
 
@@ -79,7 +85,7 @@ function parseQuestionsFromDom(htmlString) {
           currentQ.options.push({
             id: 'opt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             text: cleanLineHtml.replace(/^([A-D])[\.:\)]\s*/i, '').trim(),
-            isCorrect: false
+            isCorrect: checkIsCorrectOption(tempDiv)
           });
         } else if (currentQ.options.length === 0) {
           // Nối văn bản hoặc ảnh thuộc về phần nội dung câu hỏi
@@ -104,25 +110,14 @@ function parseQuestionsFromDom(htmlString) {
 
   return questions;
 }
-/**
- * Làm sạch HTML nhưng giữ nguyên thẻ <img> với lớp responsive
- */
-function cleanHtmlContent(element) {
-  const clone = element.cloneNode(true);
-  const imgs = clone.querySelectorAll('img');
-  imgs.forEach(img => {
-    img.removeAttribute('style');
-    img.setAttribute('class', 'exam-inline-img');
-  });
-  return clone.innerHTML;
-}
 
 /**
- * Kiểm tra xem lựa chọn có được bôi đậm/gạch chân không
+ * Kiểm tra xem lựa chọn có được bôi đậm/gạch chân (đáp án đúng trong Word) không
  */
-function isOptionBold(element) {
-  const html = element.innerHTML;
-  return /<(b|strong|u)>(\s*([A-D])[\.:\)])<\/(b|strong|u)>/i.test(html) || !!element.querySelector('strong, b, u');
+function checkIsCorrectOption(tempDiv) {
+  const html = tempDiv.innerHTML;
+  return /<(b|strong|u)>(\s*([A-D])[\.:\)])<\/(b|strong|u)>/i.test(html) || 
+         !!tempDiv.querySelector('strong, b, u');
 }
 
 /**
@@ -130,7 +125,7 @@ function isOptionBold(element) {
  */
 async function processImagesWithAi(questions) {
   const config = getConfig();
-  if (!config.geminiKey) return questions; // Nếu chưa cài Key thì giữ nguyên Base64
+  if (!config || !config.geminiKey) return questions; // Nếu chưa cài Key thì giữ nguyên Base64
 
   for (let q of questions) {
     q.question = await replaceImagesInTextWithAi(q.question, config);
@@ -157,7 +152,7 @@ async function replaceImagesInTextWithAi(contentHtml, config) {
     if (src && src.startsWith('data:image')) {
       try {
         const latexOrImg = await callGeminiVisionToIdentify(src, config);
-        if (latexOrImg.isFormula) {
+        if (latexOrImg && latexOrImg.isFormula && latexOrImg.result) {
           // Nếu là công thức, thay thế thẻ <img> bằng mã LaTeX
           const span = document.createElement('span');
           span.textContent = ` $${latexOrImg.result}$ `;
@@ -205,7 +200,11 @@ async function callGeminiVisionToIdentify(base64Image, config) {
   const jsonMatch = textReply.match(/\{[\s\S]*\}/);
 
   if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.error("Lỗi parse JSON từ AI:", e);
+    }
   }
 
   return { isFormula: false, result: '' };
