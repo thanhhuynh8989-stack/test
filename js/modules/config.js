@@ -28,16 +28,9 @@ export function getConfig() {
     ghBranch: 'main',
     ghToken: '',
     geminiKey: '',
-    geminiModel: 'gemini-1.5-flash',
+    geminiModel: 'gemini-3.6-flash',
     webhookUrl: ''
   };
-}
-
-/**
- * Lưu cấu hình hệ thống vào localStorage
- */
-export function saveConfig(configData) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(configData));
 }
 
 /**
@@ -52,16 +45,17 @@ export function initConfigModule() {
 
   const config = getConfig();
 
-  // Đổ dữ liệu đã lưu vào các trường tương ứng trên Form
-  const fields = ['ghOwner', 'ghRepo', 'ghBranch', 'ghToken', 'geminiKey', 'webhookUrl'];
-  fields.forEach(field => {
-    const el = document.getElementById(field);
-    if (el) el.value = config[field] || (field === 'ghBranch' ? 'main' : '');
-  });
+  // Đổ dữ liệu đã lưu vào form
+  if (document.getElementById('ghOwner')) document.getElementById('ghOwner').value = config.ghOwner || '';
+  if (document.getElementById('ghRepo')) document.getElementById('ghRepo').value = config.ghRepo || '';
+  if (document.getElementById('ghBranch')) document.getElementById('ghBranch').value = config.ghBranch || 'main';
+  if (document.getElementById('ghToken')) document.getElementById('ghToken').value = config.ghToken || '';
+  if (document.getElementById('geminiKey')) document.getElementById('geminiKey').value = config.geminiKey || '';
+  if (document.getElementById('webhookUrl')) document.getElementById('webhookUrl').value = config.webhookUrl || '';
 
-  // Khôi phục lựa chọn Model Gemini trên giao diện
+  // Khôi phục lựa chọn Model Gemini
   if (select && customInput) {
-    const savedModel = config.geminiModel || 'gemini-1.5-flash';
+    const savedModel = config.geminiModel || 'gemini-3.6-flash';
     const existingOptions = Array.from(select.options).map(opt => opt.value);
 
     if (existingOptions.includes(savedModel)) {
@@ -73,7 +67,7 @@ export function initConfigModule() {
       customInput.value = savedModel;
     }
 
-    // Sự kiện ẩn/hiện ô nhập thủ công khi thay đổi Dropdown
+    // Sự kiện khi thay đổi Dropdown Model
     select.addEventListener('change', () => {
       if (select.value === 'custom') {
         customInput.style.display = 'block';
@@ -88,12 +82,12 @@ export function initConfigModule() {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Lấy tên Model thực tế từ Dropdown hoặc ô nhập tùy chỉnh
-    let selectedModel = config.geminiModel || 'gemini-1.5-flash';
+    // Lấy tên Model thực tế từ Dropdown hoặc Ô nhập thủ công
+    let selectedModel = config.geminiModel || 'gemini-3.6-flash';
     if (select && customInput) {
       selectedModel = select.value;
       if (selectedModel === 'custom') {
-        selectedModel = customInput.value.trim() || 'gemini-1.5-flash';
+        selectedModel = customInput.value.trim() || 'gemini-3.6-flash';
       }
     }
 
@@ -107,7 +101,7 @@ export function initConfigModule() {
       webhookUrl: document.getElementById('webhookUrl')?.value.trim() ?? config.webhookUrl
     };
 
-    saveConfig(newConfig);
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(newConfig));
 
     const badge = document.querySelector('.status-badge');
     if (badge) {
