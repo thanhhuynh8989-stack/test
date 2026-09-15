@@ -1,5 +1,6 @@
 import { getConfig, getCurrentUser } from './config.js';
 import { loadExamLibrary } from './library.js';
+import { parseDocxWithAi } from './aiParser.js';
 
 let currentExamData = [];
 
@@ -24,36 +25,58 @@ async function handleWordUpload() {
   }
 
   if (typeof mammoth === 'undefined') {
-    alert('❌ Khuyết thư viện Mammoth.js! Vui lòng chèn script MammothJS vào file HTML.');
+    alert('❌ Thiếu thư viện Mammoth.js! Vui lòng chèn script MammothJS vào file HTML.');
     return;
   }
 
   const file = fileInput.files[0];
-  const reader = new FileReader();
+  
+  // Tự động tìm nút trích xuất để tạo hiệu ứng chờ
+  const btnProcess = document.getElementById('btnProcessWord') || document.querySelector('button[onclick*="handleWordUpload"]');
+  const originalBtnText = btnProcess ? btnProcess.textContent : '';
 
-  reader.onload = async function (e) {
-    const arrayBuffer = e.target.result;
-    try {
-      const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-      const htmlText = result.value;
+  if (btnProcess) {
+    btnProcess.disabled = true;
+    btnProcess.textContent = '⏳ Đang bóc tách & phân tích AI...';
+  }
 
-      currentExamData = parseQuestionsFromHtml(htmlText);
+  try {
+    // 1. Đọc file trực tiếp bằng async/await (Không dùng FileReader callback rườm rà)
+    const arrayBuffer = await file.arrayBuffer();
 
-      if (currentExamData.length === 0) {
-        alert('Không tìm thấy câu hỏi nào trong file Word. Vui lòng kiểm tra lại định dạng!');
-        return;
-      }
+    // 2. Gọi mô-đun AI xử lý (Tự động giữ vị trí ảnh & chuyển công thức sang LaTeX)
+    currentExamData = await parseDocxWithAi(arrayBuffer);
 
-      renderPreviewUI();
-
-    } catch (err) {
-      alert('Lỗi bóc tách file Word: ' + err.message);
+    if (!currentExamData || currentExamData.length === 0) {
+      alert('Không tìm thấy câu hỏi nào trong file Word. Vui lòng kiểm tra lại định dạng!');
+      return;
     }
-  };
 
-  reader.readAsArrayBuffer(file);
+    // 3. Render giao diện xem trước đề thi
+    renderPreviewUI();
+
+    // 4. Tự động chuyển mã $LaTeX$ thành công thức hiển thị sắc nét (nếu có KaTeX)
+    if (typeof renderMathInElement === 'function') {
+      const previewBox = document.getElementById('previewContainer') || document.body;
+      renderMathInElement(previewBox, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ],
+        throwOnError: false
+      });
+    }
+
+  } catch (err) {
+    alert('Lỗi bóc tách file Word: ' + err.message);
+  } finally {
+    // 5. Khôi phục trạng thái nút bấm sau khi xử lý xong
+    if (btnProcess) {
+      btnProcess.disabled = false;
+      btnProcess.textContent = originalBtnText || 'Trích Xuất & Xem Trước Đề Thi';
+    }
+  }
 }
-
 // 2. Chuyển đổi HTML sang mảng Object Câu hỏi
 function parseQuestionsFromHtml(html) {
   const tempDiv = document.createElement('div');
