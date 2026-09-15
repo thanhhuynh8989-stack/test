@@ -1,0 +1,281 @@
+{
+  "examId": "test__csth_2_7749",
+  "title": "Test_ĐCSTH_2",
+  "duration": 10,
+  "maxViolations": 2,
+  "createdBy": "admin",
+  "createdAt": "2026-09-15T08:52:07.749Z",
+  "totalQuestions": 10,
+  "questions": [
+    {
+      "id": "q_1789462270112_nw8ov",
+      "question": "<strong>Câu 1: </strong>Đại lượng có vai trò là tín hiệu sinh học để điều chỉnh kích thước quần thể là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_4za4f",
+          "text": "Mật độ của quần thể.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_ak94w",
+          "text": "Sự thay đổi của các yếu tố môi trường vô sinh.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_6prdd",
+          "text": "Nhân tố sinh thái “phụ thuộc vào mật độ”.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_bt9pt",
+          "text": "Số lượng cá thể của quần thể.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_1d25t",
+      "question": "<strong>Câu 2: </strong>Đặc trưng nào sau đây là của quần thể sinh vật?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_mxuv0",
+          "text": "Loài ưu thế.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_3mzjn",
+          "text": "Mật độ.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_6lhql",
+          "text": "Loài đặc trưng.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_48w66",
+          "text": "Độ đa dạng.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_v7amo",
+      "question": "<strong>Câu 3: </strong>Phát biểu nào sau đây không đúng với đặc điểm của quần thể?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_8s09x",
+          "text": "Sự phân hóa của các quần thể gắn với sự phân hóa của đặc điểm môi trường",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_a4soa",
+          "text": "Nơi sinh sống của quần thể phù hợp với những đặc điểm sinh học và khả năng vận chuyển của loài",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_gui53",
+          "text": "Mỗi quần thể có thể có rất nhiều tập hợp gen",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_jjop8",
+          "text": "Quá trình hình thành quần thể là quá trình lịch sử.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_97cd9",
+      "question": "<strong>Câu 4: </strong>Đặc điểm nào sau đây là đặc điểm về cấu trúc của quần thể?",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_1cnlf",
+          "text": "Kích thước và mật độ của quần thể",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_z36q4",
+          "text": "Thành phần tuổi",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_e3bbt",
+          "text": "Sự phân dị của các cá thể trong quần thể",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_wxx5k",
+          "text": "Tất cả các đáp án trên đều đúng",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_a2an8",
+      "question": "<strong>Câu 5: </strong>Điều <strong>không đúng</strong> khi kết luận mật độ quần thể được coi là một trong những đặc tính cơ bản của quần thể là mật độ có ảnh hưởng tới:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_hppho",
+          "text": "các cá thể trưởng thành.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_0weuh",
+          "text": "mức độ lan truyền của vật kí sinh.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_wt7bj",
+          "text": "tần số gặp nhau giữa các cá thể trong mùa sinh sản.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_gi88p",
+          "text": "mức độ sử sụng nguồn sống trong sinh sản và tác động của loài đó trong quần xã.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_uu65i",
+      "question": "<strong>Câu 6: </strong>Trạng thái cân bằng của quần thể là là trạng thái số lượng cá thể ổn định do",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_wdwdc",
+          "text": "sự tương quan giữa tỉ lệ sinh và tỉ lệ tử vong.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_rdlai",
+          "text": "sức sinh sản giảm, sự tử vong tăng.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_raudk",
+          "text": "sức sinh sản tăng, sự tử vong giảm.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_a5pxl",
+          "text": "súc sinh sản giảm, sự tử vong giảm.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_wxrr6",
+      "question": "<strong>Câu 7: </strong>Những nguyên nhân làm cho kích thước của quần thể thay đổi là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_tb5fg",
+          "text": "mức độ sinh sản.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_ft7o0",
+          "text": "Tất cả các đáp án trên.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_azam5",
+          "text": "mức độ nhập cư và xuất cư.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_yxbfi",
+          "text": "mức độ tử vong.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_30rgm",
+      "question": "<strong>Câu 8: </strong>Điều không đúng về cơ chế tham gia điều chỉnh số lượng cá thể của quần thể là:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_g5imu",
+          "text": "sự thay đổi mức độ sinh sản và tử vong dưới tác động của nhân tố vô sinh và hữu sinh.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_3m2z8",
+          "text": "sự cạnh tranh cùng loài và sự di cư của một bộ phận hay cả quần thể.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_qxhon",
+          "text": "tỉ lệ sinh tăng thì tỉ lệ tử giảm trong quần thể.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_5z2ob",
+          "text": "sự điều chỉnh vật ăn thịt và vật kí sinh.",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_opmap",
+      "question": "<strong>Câu 9: </strong>Sự phân hóa của các quần thể gắn với:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_sgt0j",
+          "text": "Các mối quan hệ tương tác dương.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_0ki4n",
+          "text": "Mật độ của quần thể.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_g6ie4",
+          "text": "Mối quan hệ cạnh tranh.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_4nw5t",
+          "text": "sự phân hóa của đặc điểm môi trường.",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": "q_1789462270112_xnbxb",
+      "question": "<strong>Câu 10: </strong>Quá trình hình thành quần thể là quá trình lịch sử, nó biểu hiện thông qua:",
+      "noShuffleOptions": false,
+      "options": [
+        {
+          "id": "opt_1789462270112_sir4e",
+          "text": "mối quan hệ gắn bó giữa các cá thể của quần thể với điều kiện ngoại cảnh.",
+          "isCorrect": true
+        },
+        {
+          "id": "opt_1789462270112_1685j",
+          "text": "mối quan hệ giữa các cá thể đực và cá thể cái.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_df34z",
+          "text": "mối quan hệ giữa quần thể này với quần thể khác.",
+          "isCorrect": false
+        },
+        {
+          "id": "opt_1789462270112_gn276",
+          "text": "mối quan hệ giữa các cá thể của quần thể với môi trường vật lý.",
+          "isCorrect": false
+        }
+      ]
+    }
+  ]
+}
